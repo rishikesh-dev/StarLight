@@ -1,0 +1,30 @@
+name: starlight
+description: "StarLight - Replacement app for MR Star BLE LED strip controller"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.0.0
+  flutter_blue_plus: ^1.10.0
+  shared_preferences: ^2.2.0
+  equatable: ^2.0.0
+  rxdart: ^0.28.0
+  permission_handler: ^13.0.2
+
+  bloc: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.0
+  bloc_test: ^10.0.0
+
+  test: any
+flutter:
+  uses-material-design: true

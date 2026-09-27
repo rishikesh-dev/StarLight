@@ -1,0 +1,10 @@
+# StarLight Core runtime dependencies.
+#
+# Verified against the APK-derived protocol; the BLE stack must match the
+# Android side (20-byte chunks, 200 ms spacing, CCCD notifications).
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+# Verify against bleak 3.0.2 on this machine (Linux/BlueZ); it needs the
+# BlueZ device path for a strip that is connected and therefore not advertising.
+bleak>=3.0
