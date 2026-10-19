@@ -1,4 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:equatable/equatable.dart';
+
 import 'device_type.dart';
 import 'device_capability.dart';
 import 'device_state.dart';
@@ -101,14 +104,38 @@ class Device extends Equatable {
     );
   }
 
+  /// Returns a copy of this device assigned to [roomId].
+  ///
+  /// Unlike [copyWith], passing `null` clears the room assignment — required to
+  /// unassign a device when its room is deleted.
+  Device withRoom(String? roomId) => Device(
+    id: id,
+    name: name,
+    type: type,
+    manufacturer: manufacturer,
+    model: model,
+    transport: transport,
+    address: address,
+    roomId: roomId,
+    capabilities: capabilities,
+    connectionState: connectionState,
+    state: state,
+    favorite: favorite,
+    lastSeen: lastSeen,
+    metadata: metadata,
+  );
+
   bool get isConnected => connectionState == DeviceConnectionState.connected;
+
   bool get isConnecting => connectionState == DeviceConnectionState.connecting;
-  bool get isDisconnected => connectionState == DeviceConnectionState.disconnected;
+  bool get isDisconnected =>
+      connectionState == DeviceConnectionState.disconnected;
   bool get hasError => connectionState == DeviceConnectionState.error;
 
   /// Checks whether this device supports a given capability.
   /// Used by the UI and scene engine to decide which controls are available.
-  bool supports(DeviceCapability capability) => capabilities.contains(capability);
+  bool supports(DeviceCapability capability) =>
+      capabilities.contains(capability);
 
   /// Checks whether this device supports ALL of the given capabilities.
   bool supportsAll(Iterable<DeviceCapability> caps) =>

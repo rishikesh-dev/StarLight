@@ -1,8 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:starlight/core/utils/app_logger.dart';
+
 import '../models/scene_model.dart';
 
 /// Data source for persisting scenes to SharedPreferences.
@@ -46,6 +49,10 @@ class SceneDataSource {
       scenes.add(scene);
     }
     await saveScenes(scenes);
+  }
+
+  Future<void> deleteScene(String sceneId) async {
+    await removeScene(sceneId);
   }
 
   Future<void> removeScene(String sceneId) async {

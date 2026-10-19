@@ -1,0 +1,79 @@
+NOTICE file for StarLight
+
+This product includes software developed by the StarLight contributors.
+
+Copyright 2024-present StarLight Contributors
+
+This product bundles or depends on the following third-party components, each
+distributed under its own license terms. The full license texts are available
+in the respective package repositories or as referenced below.
+
+Direct dependencies (declared in pubspec.yaml):
+
+* bloc (MIT License)
+  https://github.com/felangel/bloc
+  Copyright (c) 2019 Felix Angelov
+
+* equatable (MIT License)
+  https://github.com/felangel/equatable
+  Copyright (c) 2019 Felix Angelov
+
+* flutter_bloc (MIT License)
+  https://github.com/felangel/bloc
+  Copyright (c) 2019 Felix Angelov
+
+* flutter_blue_plus (MIT License)
+  https://github.com/boskokg/flutter_blue_plus
+  Copyright (c) 2019 Paul DeMarco
+
+* permission_handler (MIT License)
+  https://github.com/Baseflow/flutter-permission-handler
+  Copyright (c) 2019 Baseflow
+
+* rxdart (Apache License 2.0)
+  https://github.com/ReactiveX/rxdart
+  Copyright (c) 2015-2022, RxDart contributors
+
+* shared_preferences (BSD-3-Clause License)
+  https://github.com/flutter/plugins/tree/main/packages/shared_preferences
+  Copyright 2013 The Flutter Authors. All rights reserved.
+
+Development dependencies:
+
+* bloc_test (MIT License)
+  https://github.com/felangel/bloc
+  Copyright (c) 2019 Felix Angelov
+
+* flutter_lints (BSD-3-Clause License)
+  https://github.com/flutter/lints
+  Copyright 2019 The Flutter Authors. All rights reserved.
+
+* mocktail (MIT License)
+  https://github.com/felangel/mocktail
+  Copyright (c) 2021 Felix Angelov
+
+* test (BSD-3-Clause License)
+  https://github.com/dart-lang/test
+  Copyright 2014 The Dart Authors. All rights reserved.
+
+The Flutter SDK (BSD-3-Clause License) and Dart SDK (BSD-3-Clause License)
+are not bundled but are required to build and run this application.
+https://flutter.dev | https://dart.dev
+Copyright 2014 The Flutter Authors. All rights reserved.
+
+Android launcher icons (mipmap-*/ic_launcher.png) are the default Flutter
+application icons provided by the Flutter SDK and are subject to the same
+BSD-3-Clause License as the Flutter SDK.
+
+The Material Icons font (MaterialIcons-Regular.otf) is bundled by the Flutter
+build system and is licensed under the Apache License 2.0.
+https://github.com/google/material-design-icons
+Copyright 2015 Google Inc. All rights reserved.
+
+MR Star protocol information (GATT service FFF0, characteristics FFF3/FFF4)
+was derived from a decompiled APK for interoperability purposes. No vendor
+source code is included in this repository. The protocol encoder/decoder
+implementations are original works by the StarLight contributors.
+
+The "GATT--DEMO" device name and related test fixtures are used for
+development and testing purposes only.

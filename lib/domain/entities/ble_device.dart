@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:equatable/equatable.dart';
 
 /// Represents a discovered BLE device.
@@ -32,10 +34,18 @@ class BleDevice extends Equatable {
       rssi: rssi ?? this.rssi,
       isConnected: isConnected ?? this.isConnected,
       debugLastCommand: debugLastCommand ?? this.debugLastCommand,
-      debugLastNotification: debugLastNotification ?? this.debugLastNotification,
+      debugLastNotification:
+          debugLastNotification ?? this.debugLastNotification,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, rssi, isConnected, debugLastCommand, debugLastNotification];
+  List<Object?> get props => [
+    id,
+    name,
+    rssi,
+    isConnected,
+    debugLastCommand,
+    debugLastNotification,
+  ];
 }

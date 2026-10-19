@@ -1,42 +1,36 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'dart:async';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:starlight/data/adapters/starlight_ble_adapter.dart';
+import 'package:starlight/data/datasources/ble_datasource.dart';
 import 'package:starlight/data/datasources/device_datasource.dart';
 import 'package:starlight/data/models/device_model.dart';
 import 'package:starlight/domain/adapters/device_adapter.dart';
 import 'package:starlight/domain/entities/connection_state.dart';
 import 'package:starlight/domain/entities/device.dart';
+import 'package:starlight/domain/entities/device_event.dart';
 import 'package:starlight/domain/entities/device_state.dart';
 import 'package:starlight/domain/entities/device_type.dart';
 import 'package:starlight/domain/repositories/device_repository.dart';
 
 /// Implementation of [DeviceRepository] using device adapters.
 ///
-/// This replaces [BleRepositoryImpl] with a universal adapter-based approach.
-/// Devices are persisted to SharedPreferences via [DeviceDataSource] so that
-/// previously configured devices survive application restart.
+/// One authoritative registry for every configured device, persisted to
+/// SharedPreferences via [DeviceDataSource]. Adapters must share a single
+/// transport owner per physical connection — pass the same [BleDataSource]
+/// used by `BleRepositoryImpl` when constructing the BLE adapter.
 class DeviceRepositoryImpl implements DeviceRepository {
   final List<DeviceAdapter> _adapters;
   final DeviceDataSource? _deviceDataSource;
 
   final Map<String, Device> _devices = {};
-  final Map<String, StreamController<DeviceConnectionState>> _connectionControllers =
-      {};
+  final Map<String, StreamController<DeviceConnectionState>>
+  _connectionControllers = {};
+  final StreamController<DeviceEvent> _eventsController =
+      StreamController<DeviceEvent>.broadcast();
 
-  DeviceRepositoryImpl({
-    List<DeviceAdapter>? adapters,
-    DeviceDataSource? deviceDataSource,
-  })  : _adapters = adapters ?? [StarLightBleAdapter()],
-        _deviceDataSource = deviceDataSource {
-    _initAdapters();
-  }
-
-  void _initAdapters() {
-    for (final adapter in _adapters) {
-      // Adapters can initialize themselves here if needed.
-    }
-  }
+  DeviceRepositoryImpl({required this._adapters, this._deviceDataSource});
 
   DeviceAdapter? _getAdapter(Device device) {
     for (final adapter in _adapters) {
@@ -47,14 +41,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
     return null;
   }
 
-  DeviceAdapter? _getAdapterByTransport(String transport) {
-    for (final adapter in _adapters) {
-      if (adapter.transport == transport) {
-        return adapter;
-      }
-    }
-    return null;
-  }
+  @override
+  Stream<DeviceEvent> get events => _eventsController.stream;
 
   // --- Persistence ---
 
@@ -198,19 +186,30 @@ class DeviceRepositoryImpl implements DeviceRepository {
     final controller = StreamController<DeviceConnectionState>.broadcast();
     _connectionControllers[deviceId] = controller;
 
-    adapter.connect(device).listen(
-      (state) {
-        controller.add(state);
-        _devices[deviceId] = device.copyWith(connectionState: state);
-      },
-      onError: (e) {
-        controller.addError(e);
-      },
-      onDone: () {
-        controller.close();
-        _connectionControllers.remove(deviceId);
-      },
-    );
+    adapter
+        .connect(device)
+        .listen(
+          (state) {
+            if (!controller.isClosed) controller.add(state);
+            final previous = _devices[deviceId]?.connectionState;
+            _devices[deviceId] = device.copyWith(connectionState: state);
+            if (previous != state) {
+              _eventsController.add(
+                DeviceEvent.connectionChanged(
+                  deviceId: deviceId,
+                  connected: state == DeviceConnectionState.connected,
+                ),
+              );
+            }
+          },
+          onError: (e) {
+            controller.addError(e);
+          },
+          onDone: () {
+            controller.close();
+            _connectionControllers.remove(deviceId);
+          },
+        );
 
     return controller.stream;
   }
@@ -224,6 +223,15 @@ class DeviceRepositoryImpl implements DeviceRepository {
     if (adapter != null) {
       await adapter.disconnect(device);
     }
+    // The adapter's connection stream usually reports the disconnect during
+    // the await above (and the registry listener emits the event). Only emit
+    // here when the adapter stayed silent — never twice for one disconnect.
+    if (_devices[deviceId]?.connectionState !=
+        DeviceConnectionState.disconnected) {
+      _eventsController.add(
+        DeviceEvent.connectionChanged(deviceId: deviceId, connected: false),
+      );
+    }
     _devices[deviceId] = device.copyWith(
       connectionState: DeviceConnectionState.disconnected,
     );
@@ -235,22 +243,49 @@ class DeviceRepositoryImpl implements DeviceRepository {
   // --- Commands ---
 
   @override
-  Future<void> sendCommand(String deviceId, DeviceCommand command) async {
+  Future<CommandResult> sendCommand(
+    String deviceId,
+    DeviceCommand command,
+  ) async {
     final device = _devices[deviceId];
     if (device == null) {
-      throw Exception('Device not found: $deviceId');
+      return CommandResult.failure(
+        'device_not_found',
+        'Device not found: $deviceId',
+      );
     }
 
     final adapter = _getAdapter(device);
     if (adapter == null) {
-      throw Exception('No adapter for device: $deviceId');
+      return CommandResult.failure(
+        'no_adapter',
+        'No adapter for device: $deviceId',
+      );
     }
 
     if (device.connectionState != DeviceConnectionState.connected) {
-      throw Exception('Device not connected: $deviceId');
+      return CommandResult.failure(
+        'not_connected',
+        'Device not connected: $deviceId',
+      );
     }
 
-    await adapter.sendCommand(device, command);
+    final result = await adapter.sendCommand(device, command);
+    if (!result.success) {
+      _eventsController.add(
+        DeviceEvent(
+          deviceId: deviceId,
+          kind: DeviceEventKind.error,
+          timestamp: DateTime.now(),
+          data: {
+            'command': command.type,
+            'error': result.error,
+            'message': result.message,
+          },
+        ),
+      );
+    }
+    return result;
   }
 
   @override
@@ -275,7 +310,9 @@ class DeviceRepositoryImpl implements DeviceRepository {
       return controller.stream;
     }
     final device = _devices[deviceId];
-    return Stream.value(device?.connectionState ?? DeviceConnectionState.disconnected);
+    return Stream.value(
+      device?.connectionState ?? DeviceConnectionState.disconnected,
+    );
   }
 
   /// Adds a discovered device to the in-memory registry (does not persist).

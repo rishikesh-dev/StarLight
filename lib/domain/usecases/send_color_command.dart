@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import '../../core/ble/protocol_encoder.dart';
 import '../../core/utils/app_logger.dart';
 import '../entities/light_command.dart';
@@ -14,8 +16,6 @@ class SendColorCommand {
   Future<void> call(int red, int green, int blue) {
     AppLog.debug('usecase: sendColor rgb=($red,$green,$blue)');
     final bytes = ProtocolEncoder.colorFromRGB(red, green, blue);
-    return repository.sendCommand(
-      LightCommand(type: 'color', bytes: bytes),
-    );
+    return repository.sendCommand(LightCommand(type: 'color', bytes: bytes));
   }
 }

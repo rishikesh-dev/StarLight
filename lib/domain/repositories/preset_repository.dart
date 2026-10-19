@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import '../entities/preset.dart';
 
 /// Abstract repository for preset storage.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
 
 /// Brightness slider for LED brightness control.
@@ -33,10 +35,7 @@ class BrightnessSlider extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Brightness',
-                style: theme.textTheme.titleMedium,
-              ),
+              Text('Brightness', style: theme.textTheme.titleMedium),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -68,7 +67,9 @@ class BrightnessSlider extends StatelessWidget {
               value: normalizedBrightness.toDouble(),
               min: 0.0,
               max: 1.0,
-              onChanged: isConnected ? (v) => onChanged((v * 1000).round()) : null,
+              onChanged: isConnected
+                  ? (v) => onChanged((v * 1000).round())
+                  : null,
               onChangeEnd: (v) => onChangeEnd((v * 1000).round()),
             ),
           ),

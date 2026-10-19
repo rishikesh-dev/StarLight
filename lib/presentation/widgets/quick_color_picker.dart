@@ -1,7 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
 
 import 'package:starlight/domain/entities/rgb_color.dart';
 import 'package:starlight/presentation/theme/app_theme.dart';
+import 'package:starlight/presentation/theme/rgb_color_x.dart';
 
 /// A compact color swatch grid for quick color selection.
 class QuickColorPicker extends StatelessWidget {
@@ -60,9 +63,8 @@ class _ColorSwatch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final flutterColor = Color(
-      (color.red << 16) | (color.green << 8) | color.blue,
-    );
+    final tokens = context.tokens;
+    final flutterColor = color.toColor();
     return Semantics(
       label: 'Color ${color.toHexStr()}',
       button: true,
@@ -79,10 +81,10 @@ class _ColorSwatch extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(
               color: isSelected
-                  ? Colors.white
+                  ? tokens.onSurface
                   : flutterColor == Colors.white
-                      ? AppColors.border
-                      : Colors.transparent,
+                  ? tokens.border
+                  : Colors.transparent,
               width: isSelected ? 3 : 1,
             ),
             boxShadow: [
@@ -92,7 +94,7 @@ class _ColorSwatch extends StatelessWidget {
               ),
               if (isSelected)
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: tokens.onSurface.withValues(alpha: 0.6),
                   blurRadius: 0,
                   spreadRadius: 1,
                 ),

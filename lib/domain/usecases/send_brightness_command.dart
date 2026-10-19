@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import '../../core/ble/protocol_encoder.dart';
 import '../../core/utils/app_logger.dart';
 import '../entities/light_command.dart';

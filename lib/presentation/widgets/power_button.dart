@@ -1,4 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
+
+import 'package:starlight/presentation/theme/app_theme.dart';
 
 /// Large, obvious power button used in the controller and Home card.
 class PowerButton extends StatelessWidget {
@@ -15,6 +19,7 @@ class PowerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.tokens;
     final enabled = isConnected && onTap != null;
     final effectiveIsOn = isConnected && isOn;
 
@@ -30,21 +35,21 @@ class PowerButton extends StatelessWidget {
           height: 88,
           decoration: BoxDecoration(
             color: effectiveIsOn
-                ? const Color(0xFF4CAF50).withValues(alpha: 0.18)
-                : const Color(0xFF25252C),
+                ? tokens.success.withValues(alpha: 0.18)
+                : tokens.surfaceElevated,
             shape: BoxShape.circle,
             border: Border.all(
               color: effectiveIsOn
-                  ? const Color(0xFF4CAF50)
+                  ? tokens.success
                   : isConnected
-                      ? const Color(0xFF8E6CFF)
-                      : const Color(0xFF4A4A55),
+                  ? tokens.primary
+                  : tokens.disabled,
               width: 3,
             ),
             boxShadow: effectiveIsOn
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF4CAF50).withValues(alpha: 0.45),
+                      color: tokens.success.withValues(alpha: 0.45),
                       blurRadius: 18,
                     ),
                   ]
@@ -54,10 +59,10 @@ class PowerButton extends StatelessWidget {
             effectiveIsOn ? Icons.power : Icons.power_off,
             size: 40,
             color: effectiveIsOn
-                ? const Color(0xFF4CAF50)
+                ? tokens.success
                 : isConnected
-                    ? const Color(0xFF8E6CFF)
-                    : const Color(0xFF4A4A55),
+                ? tokens.primary
+                : tokens.disabled,
           ),
         ),
       ),

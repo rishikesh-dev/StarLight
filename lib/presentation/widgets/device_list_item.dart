@@ -1,4 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
+
+import 'package:starlight/presentation/theme/app_theme.dart';
 
 import '../../domain/entities/ble_device.dart';
 
@@ -20,6 +24,7 @@ class DeviceListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = context.tokens;
     final isDemo = device.name.contains('GATT--DEMO');
 
     return Card(
@@ -27,32 +32,42 @@ class DeviceListItem extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: isDemo
-              ? const Color(0xFF8E6CFF)
-              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+              ? tokens.primary
+              : tokens.onSurfaceVariant.withValues(alpha: 0.2),
           child: const Icon(Icons.bluetooth, size: 20),
         ),
         title: Row(
           children: [
-            Text(
-              device.name,
-              style: theme.textTheme.titleMedium,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Expanded(
+              child: Text(
+                device.name,
+                style: theme.textTheme.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             if (isDemo) ...[
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8E6CFF).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'MR Star',
-                  style: TextStyle(
-                    color: Color(0xFF8E6CFF),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'MR Star',
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -72,14 +87,14 @@ class DeviceListItem extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : device.isConnected
-                ? IconButton(
-                    icon: const Icon(Icons.cancel, color: Colors.red),
-                    onPressed: onDisconnect,
-                  )
-                : IconButton(
-                    icon: const Icon(Icons.power, color: Color(0xFF8E6CFF)),
-                    onPressed: onConnect,
-                  ),
+            ? IconButton(
+                icon: Icon(Icons.cancel, color: tokens.error),
+                onPressed: onDisconnect,
+              )
+            : IconButton(
+                icon: Icon(Icons.power, color: tokens.primary),
+                onPressed: onConnect,
+              ),
       ),
     );
   }

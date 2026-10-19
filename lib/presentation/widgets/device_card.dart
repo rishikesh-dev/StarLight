@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
 
 import 'package:starlight/domain/entities/connection_state.dart';
@@ -29,7 +31,8 @@ class DeviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final connected = device.connectionState == DeviceConnectionState.connected;
-    final connecting = device.connectionState == DeviceConnectionState.connecting;
+    final connecting =
+        device.connectionState == DeviceConnectionState.connecting;
     final hasPower = device.supports(DeviceCapability.power);
 
     return Card(
@@ -38,7 +41,11 @@ class DeviceCard extends StatelessWidget {
           : const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
         onTap: onTap,
-        leading: _DeviceIcon(device: device, connected: connected, connecting: connecting),
+        leading: _DeviceIcon(
+          device: device,
+          connected: connected,
+          connecting: connecting,
+        ),
         title: Text(
           device.name,
           style: theme.textTheme.titleMedium,
@@ -71,7 +78,9 @@ class DeviceCard extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   device.favorite ? Icons.favorite : Icons.favorite_border,
-                  color: device.favorite ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: device.favorite
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
                   size: 20,
                 ),
                 onPressed: onFavoriteToggle,
@@ -81,12 +90,17 @@ class DeviceCard extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   device.state.isOn ? Icons.power : Icons.power_off,
-                  color: device.state.isOn ? AppColors.success : AppColors.onSurfaceVariant,
+                  color: device.state.isOn
+                      ? AppColors.success
+                      : AppColors.onSurfaceVariant,
                 ),
                 onPressed: onPowerToggle,
                 tooltip: device.state.isOn ? 'Turn off' : 'Turn on',
               )
-            else if (showPower && hasPower && onPowerToggle != null && !connected)
+            else if (showPower &&
+                hasPower &&
+                onPowerToggle != null &&
+                !connected)
               const Icon(Icons.power_off, color: AppColors.disabled, size: 20),
             const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
           ],
@@ -136,9 +150,7 @@ class _DeviceIcon extends StatelessWidget {
         color: AppColors.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: connected
-              ? AppColors.success
-              : AppColors.border,
+          color: connected ? AppColors.success : AppColors.border,
           width: connected ? 2 : 1,
         ),
       ),
@@ -151,16 +163,5 @@ class _DeviceIcon extends StatelessWidget {
     );
   }
 
-  IconData _iconFor(DeviceType type) {
-    return switch (type) {
-      DeviceType.light => Icons.light,
-      DeviceType.plug => Icons.power,
-      DeviceType.fan => Icons.air,
-      DeviceType.sensor => Icons.sensors,
-      DeviceType.tv => Icons.tv,
-      DeviceType.switch_ => Icons.toggle_on,
-      DeviceType.lamp => Icons.lightbulb,
-      DeviceType.other => Icons.device_unknown,
-    };
-  }
+  IconData _iconFor(DeviceType type) => type.icon;
 }

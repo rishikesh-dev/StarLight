@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:equatable/equatable.dart';
 
 /// Represents an RGB color (0-255 per channel).
@@ -10,11 +12,7 @@ class RGBColor extends Equatable {
 
   /// Creates an [RGBColor] from a hex integer (e.g., 0xFF5733).
   factory RGBColor.fromHex(int hex) {
-    return RGBColor(
-      (hex >> 16) & 0xFF,
-      (hex >> 8) & 0xFF,
-      hex & 0xFF,
-    );
+    return RGBColor((hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
   }
 
   /// Creates an [RGBColor] from a hex string (e.g., "FF5733" or "#FF5733").

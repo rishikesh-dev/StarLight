@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:equatable/equatable.dart';
 
 /// A user-defined or built-in color preset.
@@ -16,13 +18,7 @@ class Preset extends Equatable {
     required this.blue,
   });
 
-  Preset copyWith({
-    int? id,
-    String? name,
-    int? red,
-    int? green,
-    int? blue,
-  }) {
+  Preset copyWith({int? id, String? name, int? red, int? green, int? blue}) {
     return Preset(
       id: id ?? this.id,
       name: name ?? this.name,

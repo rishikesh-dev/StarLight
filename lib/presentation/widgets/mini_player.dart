@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,6 +9,7 @@ import 'package:starlight/presentation/bloc/ble/ble_state.dart';
 import 'package:starlight/presentation/bloc/light/light_bloc.dart';
 import 'package:starlight/presentation/bloc/light/light_event.dart';
 import 'package:starlight/presentation/bloc/light/light_state.dart';
+import 'package:starlight/presentation/theme/app_theme.dart';
 
 /// Persistent mini-player bar shown while a device is connected.
 class MiniPlayer extends StatelessWidget {
@@ -16,18 +19,26 @@ class MiniPlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<BleBloc, BleState>(
       buildWhen: (p, c) =>
-          c is BleConnected || p is BleConnected ||
-          c is BleConnecting || p is BleConnecting ||
-          c is BleDisconnected || p is BleDisconnected,
+          c is BleConnected ||
+          p is BleConnected ||
+          c is BleConnecting ||
+          p is BleConnecting ||
+          c is BleDisconnected ||
+          p is BleDisconnected,
       builder: (context, bleState) {
         final connected = bleState is BleConnected;
         if (!connected) return const SizedBox.shrink();
 
         return BlocBuilder<LightBloc, LightState>(
           buildWhen: (p, c) =>
-              c is LightOn || c is LightOff || c is PresetsLoaded ||
-              p is LightOn || p is LightOff || p is PresetsLoaded,
+              c is LightOn ||
+              c is LightOff ||
+              c is PresetsLoaded ||
+              p is LightOn ||
+              p is LightOff ||
+              p is PresetsLoaded,
           builder: (context, lightState) {
+            final tokens = context.tokens;
             final isOn = switch (lightState) {
               LightOn() => true,
               LightOff() => false,
@@ -47,15 +58,15 @@ class MiniPlayer extends StatelessWidget {
             };
 
             return Semantics(
-              label: 'Active device ${(bleState as BleConnected).device.name}',
+              label: 'Active device ${(bleState).device.name}',
               button: true,
               child: InkResponse(
                 onTap: () => Navigator.of(context).pushNamed('/controller'),
                 child: Container(
                   height: 56,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF25252C),
-                    boxShadow: [
+                  decoration: BoxDecoration(
+                    color: tokens.surfaceElevated,
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black54,
                         blurRadius: 8,
@@ -70,7 +81,9 @@ class MiniPlayer extends StatelessWidget {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: Color((color.red << 16) | (color.green << 8) | color.blue),
+                          color: Color(
+                            (color.red << 16) | (color.green << 8) | color.blue,
+                          ),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -80,7 +93,7 @@ class MiniPlayer extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              (bleState as BleConnected).device.name,
+                              (bleState).device.name,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
@@ -94,7 +107,9 @@ class MiniPlayer extends StatelessWidget {
                                   : 'OFF',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isOn ? const Color(0xFF4CAF50) : const Color(0xFF9A9AA8),
+                                color: isOn
+                                    ? tokens.success
+                                    : tokens.onSurfaceVariant,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -109,7 +124,9 @@ class MiniPlayer extends StatelessWidget {
                         },
                         child: Icon(
                           isOn ? Icons.power : Icons.power_off,
-                          color: isOn ? const Color(0xFF4CAF50) : const Color(0xFF9A9AA8),
+                          color: isOn
+                              ? tokens.success
+                              : tokens.onSurfaceVariant,
                           size: 24,
                         ),
                       ),

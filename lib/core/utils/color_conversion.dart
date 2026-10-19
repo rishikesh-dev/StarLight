@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 
 import 'app_logger.dart';
 
@@ -74,7 +75,11 @@ class ColorConversion {
   /// int value1 = (int) B[0];         // hue, truncated to int
   /// int value2 = (int)(B[1] * 1000); // saturation*1000, truncated to int
   /// ```
-  static (int value1, int value2) computeColorValues(int red, int green, int blue) {
+  static (int value1, int value2) computeColorValues(
+    int red,
+    int green,
+    int blue,
+  ) {
     final hsv = rgbToHsv(red, green, blue);
     final value1 = hsv[0].toInt();
     final value2 = (hsv[1] * 1000.0).toInt();

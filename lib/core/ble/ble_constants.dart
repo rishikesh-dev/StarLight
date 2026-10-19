@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /// BLE protocol constants extracted from the decompiled MR Star APK.
 ///
 /// Service UUID:   FFF0 (0000FFF0-0000-1000-8000-00805f9b34fb)
@@ -21,4 +23,10 @@ class BleConstants {
 
   /// Write timeout in milliseconds.
   static const int writeTimeoutMs = 5000;
+
+  /// Packet start byte.
+  static const int startByte = 0xBC;
+
+  /// Packet end byte.
+  static const int endByte = 0x55;
 }

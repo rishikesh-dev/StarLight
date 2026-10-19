@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:equatable/equatable.dart';
 
 /// Data layer model for a preset.
@@ -17,13 +19,7 @@ class PresetModel extends Equatable {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'red': red,
-      'green': green,
-      'blue': blue,
-    };
+    return {'id': id, 'name': name, 'red': red, 'green': green, 'blue': blue};
   }
 
   factory PresetModel.fromMap(Map<String, dynamic> map) {

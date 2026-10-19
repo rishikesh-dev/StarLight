@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/foundation.dart';
 
 /// Minimal structured logger for the StarLight app.
@@ -26,11 +28,7 @@ class AppLog {
   static void warn(String message) => _log('WARN', message);
 
   /// Error message with optional [error] and [stackTrace].
-  static void error(
-    String message, [
-    Object? error,
-    StackTrace? stackTrace,
-  ]) {
+  static void error(String message, [Object? error, StackTrace? stackTrace]) {
     _log('ERROR', message, error: error, stackTrace: stackTrace);
   }
 
@@ -42,7 +40,8 @@ class AppLog {
   }) {
     if (!enabled) return;
     final now = DateTime.now();
-    final stamp = '${now.hour.toString().padLeft(2, '0')}:'
+    final stamp =
+        '${now.hour.toString().padLeft(2, '0')}:'
         '${now.minute.toString().padLeft(2, '0')}:'
         '${now.second.toString().padLeft(2, '0')}.'
         '${now.millisecond.toString().padLeft(3, '0')}';

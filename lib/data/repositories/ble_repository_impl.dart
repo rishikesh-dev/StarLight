@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -10,6 +12,7 @@ import '../../core/utils/app_logger.dart';
 import '../../domain/entities/ble_device.dart';
 import '../../domain/entities/connection_state.dart';
 import '../../domain/entities/debug_state.dart';
+import '../../domain/entities/device_state_update.dart';
 import '../../domain/entities/light_command.dart';
 import '../../domain/repositories/ble_repository.dart';
 import '../datasources/ble_datasource.dart';
@@ -38,12 +41,7 @@ class BleRepositoryImpl implements BleRepository {
   @override
   Stream<DeviceConnectionState> get connectionState {
     AppLog.debug('connectionState: reading connection state stream');
-    final rawStream = dataSource.connectionState;
-    if (rawStream == null) {
-      AppLog.debug('connectionState: no stream, emitting disconnected');
-      return Stream.value(DeviceConnectionState.disconnected);
-    }
-    return rawStream.map(_mapConnectionState).handleError((e) {
+    return dataSource.connectionState.map(_mapConnectionState).handleError((e) {
       AppLog.warn('connectionState: stream error: $e');
       _currentState = DeviceConnectionState.disconnected;
     });
@@ -52,15 +50,21 @@ class BleRepositoryImpl implements BleRepository {
   @override
   Stream<DebugState> get debugState => _debugController.stream;
 
+  @override
+  Stream<DeviceStateUpdate> get stateUpdates => dataSource.stateUpdateStream;
+
   void _listenForDebugUpdates() {
     AppLog.debug('_listenForDebugUpdates: watching connection + notifications');
-    dataSource.connectionState?.listen((state) {
-      AppLog.debug('debug connection state: $state');
-      _updateDebugConnectionState(state.toString().split('.').last);
-    }, onError: (e, st) {
-      AppLog.warn('debug connection state error: $e');
-      _updateDebugConnectionState('error');
-    });
+    dataSource.connectionState.listen(
+      (state) {
+        AppLog.debug('debug connection state: $state');
+        _updateDebugConnectionState(state.toString().split('.').last);
+      },
+      onError: (e, st) {
+        AppLog.warn('debug connection state error: $e');
+        _updateDebugConnectionState('error');
+      },
+    );
 
     dataSource.notificationStream.listen((data) {
       _updateDebugNotification(data);
@@ -68,18 +72,19 @@ class BleRepositoryImpl implements BleRepository {
   }
 
   void _updateDebugConnectionState(String state) {
-    _debugController.add(_debugState.copyWith(
-      connectionState: state,
-      connectedDeviceId: dataSource.device?.remoteId.str,
-      connectedDeviceName: dataSource.device?.platformName,
-    ));
+    _debugController.add(
+      _debugState.copyWith(
+        connectionState: state,
+        connectedDeviceId: dataSource.device?.remoteId.str,
+        connectedDeviceName: dataSource.device?.platformName,
+      ),
+    );
   }
 
   void _updateDebugNotification(Uint8List data) {
-    _debugController.add(_debugState.copyWith(
-      lastNotificationHex: _bytesToHex(data),
-      rssi: null,
-    ));
+    _debugController.add(
+      _debugState.copyWith(lastNotificationHex: _bytesToHex(data), rssi: null),
+    );
   }
 
   @override
@@ -90,12 +95,14 @@ class BleRepositoryImpl implements BleRepository {
         'repository: scanDevices emitted ${models.length} device(s)',
       );
       return models
-          .map((m) => BleDevice(
-                id: m.id,
-                name: m.name,
-                rssi: m.rssi,
-                isConnected: m.isConnected,
-              ))
+          .map(
+            (m) => BleDevice(
+              id: m.id,
+              name: m.name,
+              rssi: m.rssi,
+              isConnected: m.isConnected,
+            ),
+          )
           .toList();
     });
   }
@@ -105,6 +112,27 @@ class BleRepositoryImpl implements BleRepository {
 
   @override
   Future<bool> isBluetoothEnabled() => dataSource.isBluetoothEnabled();
+
+  @override
+  Future<bool> waitForAdapterOn() => dataSource.waitForAdapterOn();
+
+  @override
+  Stream<BluetoothAdapterState> get adapterState => dataSource.adapterState;
+
+  @override
+  BluetoothAdapterState get adapterStateNow => dataSource.adapterStateNow;
+
+  @override
+  Future<bool> isSupported() => dataSource.isSupported();
+
+  @override
+  Future<bool> isPermanentlyDenied() => dataSource.isPermanentlyDenied();
+
+  @override
+  Future<void> openSystemSettings() => dataSource.openSystemSettings();
+
+  @override
+  Future<bool> enableBluetooth() => dataSource.enableBluetooth();
 
   @override
   Future<bool> hasPermissions() => dataSource.hasPermissions();
@@ -129,9 +157,11 @@ class BleRepositoryImpl implements BleRepository {
     );
     try {
       await dataSource.writeCommand(Uint8List.fromList(command.bytes));
-      _debugController.add(_debugState.copyWith(
-        lastCommandHex: _bytesToHex(Uint8List.fromList(command.bytes)),
-      ));
+      _debugController.add(
+        _debugState.copyWith(
+          lastCommandHex: _bytesToHex(Uint8List.fromList(command.bytes)),
+        ),
+      );
     } on CharacteristicNotFoundException {
       throw CharacteristicNotFoundFailure(BleConstants.writeCharUuid);
     } on DisconnectedException {

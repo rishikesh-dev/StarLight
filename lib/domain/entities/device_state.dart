@@ -1,4 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:equatable/equatable.dart';
+
 import 'device_capability.dart';
 import 'device_type.dart';
 import 'rgb_color.dart';
@@ -21,7 +24,12 @@ abstract class DeviceState extends Equatable {
   bool get isConnected;
 
   @override
-  List<Object?> get props => [deviceType, supportedCapabilities, isOn, isConnected];
+  List<Object?> get props => [
+    deviceType,
+    supportedCapabilities,
+    isOn,
+    isConnected,
+  ];
 }
 
 /// State for a light device.
@@ -31,7 +39,9 @@ class LightState extends DeviceState {
   final int? colorTemperature; // Kelvin
   final String? effect;
   final int? speed; // 0-100
+  @override
   final bool isOn;
+  @override
   final bool isConnected;
 
   const LightState({
@@ -93,7 +103,9 @@ class LightState extends DeviceState {
 
 /// State for a smart plug device.
 class PlugState extends DeviceState {
+  @override
   final bool isOn;
+  @override
   final bool isConnected;
   final double? energy; // kWh
   final double? power; // Watts
@@ -141,7 +153,9 @@ class PlugState extends DeviceState {
 
 /// State for a fan device.
 class FanState extends DeviceState {
+  @override
   final bool isOn;
+  @override
   final bool isConnected;
   final int? speed; // 0-100
   final String? mode;
@@ -163,12 +177,7 @@ class FanState extends DeviceState {
     DeviceCapability.effect,
   ];
 
-  FanState copyWith({
-    bool? isOn,
-    bool? isConnected,
-    int? speed,
-    String? mode,
-  }) {
+  FanState copyWith({bool? isOn, bool? isConnected, int? speed, String? mode}) {
     return FanState(
       isOn: isOn ?? this.isOn,
       isConnected: isConnected ?? this.isConnected,
@@ -190,7 +199,9 @@ class FanState extends DeviceState {
 
 /// Generic device state for unknown/other devices.
 class GenericDeviceState extends DeviceState {
+  @override
   final bool isOn;
+  @override
   final bool isConnected;
   final Map<String, dynamic> attributes;
 
@@ -198,8 +209,8 @@ class GenericDeviceState extends DeviceState {
     required this.isOn,
     required this.isConnected,
     this.attributes = const {},
-    required DeviceType deviceType,
-  }) : _deviceType = deviceType;
+    required this._deviceType,
+  });
 
   final DeviceType _deviceType;
 
@@ -207,9 +218,7 @@ class GenericDeviceState extends DeviceState {
   DeviceType get deviceType => _deviceType;
 
   @override
-  List<DeviceCapability> get supportedCapabilities => [
-    DeviceCapability.power,
-  ];
+  List<DeviceCapability> get supportedCapabilities => [DeviceCapability.power];
 
   GenericDeviceState copyWith({
     bool? isOn,

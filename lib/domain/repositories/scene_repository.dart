@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:starlight/domain/entities/scene.dart';
 
 abstract class SceneRepository {

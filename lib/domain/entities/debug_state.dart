@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:equatable/equatable.dart';
 
 /// A debug state tracking the last sent command and most recent notification.
@@ -50,14 +52,14 @@ class DebugState extends Equatable {
 
   @override
   List<Object?> get props => [
-        connectedDeviceId,
-        connectedDeviceName,
-        rssi,
-        serviceUuid,
-        writeCharUuid,
-        notifyCharUuid,
-        lastCommandHex,
-        lastNotificationHex,
-        connectionState,
-      ];
+    connectedDeviceId,
+    connectedDeviceName,
+    rssi,
+    serviceUuid,
+    writeCharUuid,
+    notifyCharUuid,
+    lastCommandHex,
+    lastNotificationHex,
+    connectionState,
+  ];
 }

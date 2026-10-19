@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /// Failures are returned by repositories to the presentation layer.
 abstract class Failure {
   final String message;
@@ -36,7 +38,8 @@ class ServiceNotFoundFailure extends BleFailure {
 }
 
 class CharacteristicNotFoundFailure extends BleFailure {
-  CharacteristicNotFoundFailure(String uuid) : super('Characteristic not found: $uuid');
+  CharacteristicNotFoundFailure(String uuid)
+    : super('Characteristic not found: $uuid');
 }
 
 class DisconnectedFailure extends BleFailure {

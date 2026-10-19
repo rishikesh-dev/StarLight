@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /// Helpers for comparing BLE UUIDs, which can be written in several
 /// equivalent representations:
 ///
@@ -39,4 +41,19 @@ class UuidUtils {
   /// Returns true when [a] and [b] refer to the same UUID, regardless of the
   /// representation each one uses.
   static bool matches(String a, String b) => normalize(a) == normalize(b);
+
+  /// Whether [uuid] is a well-formed Bluetooth UUID.
+  ///
+  /// Accepts the three representations a user may type into a profile editor:
+  /// 16-bit (`"fff0"`), 32-bit (`"0000fff0"`) and the full 128-bit form
+  /// (`"0000fff0-0000-1000-8000-00805f9b34fb"`). Leading/trailing whitespace is
+  /// ignored; grouping hyphens are allowed anywhere in the 128-bit form.
+  /// Returns false for empty input, non-hex characters or any other length.
+  static bool isValid(String uuid) {
+    final trimmed = uuid.trim();
+    if (trimmed.isEmpty) return false;
+    final hex = trimmed.replaceAll('-', '');
+    if (!RegExp(r'^[0-9a-fA-F]+$').hasMatch(hex)) return false;
+    return hex.length == 4 || hex.length == 8 || hex.length == 32;
+  }
 }

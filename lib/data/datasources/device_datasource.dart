@@ -1,8 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:starlight/core/utils/app_logger.dart';
+
 import '../models/device_model.dart';
 
 /// Data source for persisting configured devices to SharedPreferences.

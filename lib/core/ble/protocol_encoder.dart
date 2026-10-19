@@ -1,4 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'dart:typed_data';
+
 import '../utils/color_conversion.dart';
 
 /// Protocol encoder for the MR Star BLE LED controller.
@@ -109,8 +112,11 @@ class ProtocolEncoder {
   /// The RGB-to-HSV conversion matches Android's `Color.RGBToHSV` with the
   /// additional saturation fix from `e2.e.B()`.
   static Uint8List colorFromRGB(int red, int green, int blue) {
-    final (value1, value2) =
-        ColorConversion.computeColorValues(red, green, blue);
+    final (value1, value2) = ColorConversion.computeColorValues(
+      red,
+      green,
+      blue,
+    );
     return colorFromHSV(value1, value2);
   }
 
@@ -201,7 +207,20 @@ class ProtocolEncoder {
   /// Set mode speed.
   ///
   /// Packet: `BC 08 01 [speed] 55`
+  ///
+  /// The speed field is a single unsigned byte (0–255). A value outside that
+  /// field is a *caller* error and throws [ArgumentError] rather than being
+  /// silently masked/wrapped (which would send an unrelated speed). The wider
+  /// app-level contract (the 0–100 range the UI advertises) is enforced one
+  /// layer up, in `EffectEngine`.
   static Uint8List setSpeed(int speed) {
+    if (speed < 0 || speed > 0xFF) {
+      throw ArgumentError.value(
+        speed,
+        'speed',
+        'must be within the byte field 0–255',
+      );
+    }
     return Uint8List.fromList([
       startByte,
       cmdSpeed,
@@ -215,9 +234,15 @@ class ProtocolEncoder {
   ///
   /// Packet: `BC 06 02 [id/255] [id%255] 55`
   ///
-  /// WARNING: The mode value-to-name mapping is NOT verified.
-  /// The APK has 117 modes (cmode1..cmode117) resolved at runtime.
-  /// This method is provided for testing/development only.
+  /// This is the canonical way to select a built-in effect: callers resolve an
+  /// `EffectDefinition` in the domain catalogue (which holds the authoritative
+  /// name → mode id mapping) and pass its `protocolModeId` here. The encoder
+  /// deliberately owns **no** effect name table so there is nothing to drift
+  /// out of sync and no silent default for an unknown effect.
+  ///
+  /// WARNING: The full mode value-to-name mapping is NOT verified.
+  /// The APK has 117 modes (cmode1..cmode117) resolved at runtime; only the
+  /// catalogue's ids are exposed.
   static Uint8List setMode(int modeId) {
     if (modeId < 0) modeId = 0;
     return Uint8List.fromList([
@@ -281,4 +306,12 @@ class ProtocolEncoder {
       endByte,
     ]);
   }
+
+  // NOTE: There is intentionally no `setEffect(String)` / name→id map here.
+  // The authoritative effect catalogue lives in `domain/entities/effect.dart`
+  // (`kMrStarEffects`, `effectByCommandName`) and every caller resolves the
+  // definition and calls [setMode] with its `protocolModeId`. Removing the old
+  // encoder map fixes two defects: a duplicated table that disagreed with the
+  // adapter's map, and a silent fallback that encoded an unknown effect name as
+  // `Solid` (mode 0) instead of failing.
 }

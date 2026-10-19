@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,7 +30,13 @@ class PresetDataSource {
       const PresetModel(id: 4, name: 'Purple', red: 255, green: 0, blue: 255),
       const PresetModel(id: 5, name: 'Yellow', red: 255, green: 255, blue: 0),
       const PresetModel(id: 6, name: 'White', red: 255, green: 255, blue: 255),
-      const PresetModel(id: 7, name: 'Warm White', red: 255, green: 245, blue: 228),
+      const PresetModel(
+        id: 7,
+        name: 'Warm White',
+        red: 255,
+        green: 245,
+        blue: 228,
+      ),
     ];
   }
 

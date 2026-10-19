@@ -33,10 +33,7 @@ void main() {
 
   group('UuidUtils.matches', () {
     test('short form matches the full constant', () {
-      expect(
-        UuidUtils.matches('fff0', BleConstants.serviceUuid),
-        isTrue,
-      );
+      expect(UuidUtils.matches('fff0', BleConstants.serviceUuid), isTrue);
     });
 
     test('matches the characteristic constants', () {
@@ -46,21 +43,12 @@ void main() {
     });
 
     test('is case insensitive', () {
-      expect(
-        UuidUtils.matches('FFF0', BleConstants.serviceUuid),
-        isTrue,
-      );
+      expect(UuidUtils.matches('FFF0', BleConstants.serviceUuid), isTrue);
     });
 
     test('does not match a different uuid', () {
-      expect(
-        UuidUtils.matches('fff1', BleConstants.serviceUuid),
-        isFalse,
-      );
-      expect(
-        UuidUtils.matches('fff3', BleConstants.notifyCharUuid),
-        isFalse,
-      );
+      expect(UuidUtils.matches('fff1', BleConstants.serviceUuid), isFalse);
+      expect(UuidUtils.matches('fff3', BleConstants.notifyCharUuid), isFalse);
     });
 
     test('does not match a custom 128-bit uuid', () {

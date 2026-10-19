@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:starlight/domain/entities/connection_state.dart';
 import 'package:starlight/domain/entities/device.dart';
 import 'package:starlight/domain/entities/device_state.dart';
@@ -28,7 +30,9 @@ abstract class DeviceAdapter {
   Future<void> disconnect(Device device);
 
   /// Sends a command to the device.
-  Future<void> sendCommand(Device device, DeviceCommand command);
+  /// Returns an explicit [CommandResult]; transport failures are reported as
+  /// `success: false` rather than thrown, so callers can surface them.
+  Future<CommandResult> sendCommand(Device device, DeviceCommand command);
 
   /// Reads the current state of the device.
   Future<DeviceState> readState(Device device);

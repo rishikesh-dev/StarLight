@@ -1,4 +1,5 @@
-import 'package:starlight/core/utils/app_logger.dart';
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:starlight/domain/entities/scene.dart';
 import 'package:starlight/domain/repositories/scene_repository.dart';
 import 'package:starlight/data/datasources/scene_datasource.dart';

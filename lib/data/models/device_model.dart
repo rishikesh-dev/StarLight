@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'dart:convert';
 
 import 'package:starlight/domain/entities/device.dart';
 import 'package:starlight/domain/entities/device_capability.dart';
 import 'package:starlight/domain/entities/device_state.dart';
 import 'package:starlight/domain/entities/device_type.dart';
-import 'package:starlight/domain/entities/light_state.dart';
+import 'package:starlight/domain/entities/connection_state.dart';
 import 'package:starlight/domain/entities/rgb_color.dart';
 
 /// Serializable model for a persisted [Device].
@@ -85,19 +87,19 @@ class DeviceModel {
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'type': type,
-        'manufacturer': manufacturer,
-        'model': model,
-        'transport': transport,
-        'address': address,
-        'roomId': roomId,
-        'capabilities': capabilities,
-        'favorite': favorite,
-        'stateJson': stateJson,
-        'metadata': metadata,
-      };
+    'id': id,
+    'name': name,
+    'type': type,
+    'manufacturer': manufacturer,
+    'model': model,
+    'transport': transport,
+    'address': address,
+    'roomId': roomId,
+    'capabilities': capabilities,
+    'favorite': favorite,
+    'stateJson': stateJson,
+    'metadata': metadata,
+  };
 
   factory DeviceModel.fromMap(Map<String, dynamic> map) {
     return DeviceModel(
@@ -147,7 +149,8 @@ class DeviceModel {
       final type = map['_type'] as String?;
       if (type == 'light') {
         return LightState(
-          color: map['red'] != null || map['green'] != null || map['blue'] != null
+          color:
+              map['red'] != null || map['green'] != null || map['blue'] != null
               ? RGBColor(
                   (map['red'] as int?) ?? 0,
                   (map['green'] as int?) ?? 0,

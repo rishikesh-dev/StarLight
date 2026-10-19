@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /// Exceptions that can occur during BLE operations.
 abstract class BleException implements Exception {
   final String message;
@@ -25,7 +27,8 @@ class ConnectionTimeoutException extends BleException {
 
 class GattErrorException extends BleException {
   final int status;
-  GattErrorException(this.status) : super('GATT error: $status (status=$status)');
+  GattErrorException(this.status)
+    : super('GATT error: $status (status=$status)');
 }
 
 class ServiceNotFoundException extends BleException {
@@ -33,7 +36,8 @@ class ServiceNotFoundException extends BleException {
 }
 
 class CharacteristicNotFoundException extends BleException {
-  CharacteristicNotFoundException(String uuid) : super('Characteristic not found: $uuid');
+  CharacteristicNotFoundException(String uuid)
+    : super('Characteristic not found: $uuid');
 }
 
 class CharacteristicWriteException extends BleException {
@@ -42,4 +46,16 @@ class CharacteristicWriteException extends BleException {
 
 class DisconnectedException extends BleException {
   DisconnectedException() : super('Device disconnected');
+}
+
+/// Thrown when a room/group/scene operation violates a domain rule
+/// (blank or duplicate name, unknown device/room reference, malformed action).
+///
+/// Carries a message that is safe to show to the user.
+class ValidationException implements Exception {
+  final String message;
+  ValidationException(this.message);
+
+  @override
+  String toString() => message;
 }

@@ -17,22 +17,34 @@ void main() {
 
     test('brightness clamps minimum to 3', () {
       final bytes = ProtocolEncoder.brightness(0);
-      expect(HexUtils.toHexString(bytes), equals('BC 05 06 00 03 00 00 00 00 55'));
+      expect(
+        HexUtils.toHexString(bytes),
+        equals('BC 05 06 00 03 00 00 00 00 55'),
+      );
     });
 
     test('brightness at 1000 produces correct packet', () {
       final bytes = ProtocolEncoder.brightness(1000);
-      expect(HexUtils.toHexString(bytes), equals('BC 05 06 03 E8 00 00 00 00 55'));
+      expect(
+        HexUtils.toHexString(bytes),
+        equals('BC 05 06 03 E8 00 00 00 00 55'),
+      );
     });
 
     test('colorFromRGB red produces hue=0 saturation=1000', () {
       final bytes = ProtocolEncoder.colorFromRGB(255, 0, 0);
-      expect(HexUtils.toHexString(bytes), equals('BC 04 06 00 00 03 E8 00 00 55'));
+      expect(
+        HexUtils.toHexString(bytes),
+        equals('BC 04 06 00 00 03 E8 00 00 55'),
+      );
     });
 
     test('colorFromHSV with hue=0 sat=1000', () {
       final bytes = ProtocolEncoder.colorFromHSV(0, 1000);
-      expect(HexUtils.toHexString(bytes), equals('BC 04 06 00 00 03 E8 00 00 55'));
+      expect(
+        HexUtils.toHexString(bytes),
+        equals('BC 04 06 00 00 03 E8 00 00 55'),
+      );
     });
 
     test('setLedCount produces correct packet', () {
@@ -99,7 +111,10 @@ void main() {
 
   group('HexUtils', () {
     test('toHexString formats bytes correctly', () {
-      expect(HexUtils.toHexString([0xBC, 0x01, 0x01, 0x00, 0x55]), equals('BC 01 01 00 55'));
+      expect(
+        HexUtils.toHexString([0xBC, 0x01, 0x01, 0x00, 0x55]),
+        equals('BC 01 01 00 55'),
+      );
     });
 
     test('toHexString handles empty list', () {

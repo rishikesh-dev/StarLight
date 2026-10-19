@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:starlight/domain/entities/scene.dart';
 import 'package:starlight/presentation/bloc/scene/scene_bloc.dart';
 import 'package:starlight/presentation/bloc/scene/scene_event.dart';
-import 'package:starlight/presentation/theme/app_theme.dart';
 
 /// Minimal scene creation page.
 class SceneCreatePage extends StatefulWidget {
@@ -58,7 +59,8 @@ class _SceneCreatePageState extends State<SceneCreatePage> {
               controller: _nameController,
               decoration: const InputDecoration(
                 labelText: 'Scene name',
-                border: const EdgeInsets.all(12),
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.all(12),
               ),
               autofocus: true,
               textInputAction: TextInputAction.done,

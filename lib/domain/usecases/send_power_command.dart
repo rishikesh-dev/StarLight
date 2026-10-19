@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import '../../core/ble/protocol_encoder.dart';
 import '../../core/utils/app_logger.dart';
 import '../entities/light_command.dart';
@@ -12,8 +14,6 @@ class SendPowerCommand {
   Future<void> call(bool on) {
     AppLog.debug('usecase: sendPower on=$on');
     final bytes = on ? ProtocolEncoder.powerOn() : ProtocolEncoder.powerOff();
-    return repository.sendCommand(
-      LightCommand(type: 'power', bytes: bytes),
-    );
+    return repository.sendCommand(LightCommand(type: 'power', bytes: bytes));
   }
 }

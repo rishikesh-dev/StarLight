@@ -1,7 +1,18 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:starlight/domain/entities/connection_state.dart';
 import 'package:starlight/domain/entities/device.dart';
+import 'package:starlight/domain/entities/device_command.dart';
+import 'package:starlight/domain/entities/device_event.dart';
 import 'package:starlight/domain/entities/device_state.dart';
 import 'package:starlight/domain/entities/device_type.dart';
+import 'package:starlight/domain/entities/command_result.dart';
+
+/// Re-export the canonical entity definitions so legacy callers that typed
+/// `import 'package:starlight/domain/repositories/device_repository.dart';`
+/// still get [DeviceCommand] and [CommandResult] without a separate import.
+export 'package:starlight/domain/entities/command_result.dart';
+export 'package:starlight/domain/entities/device_command.dart';
 
 /// Abstract repository for device operations.
 /// Replaces BleRepository with a device-type-agnostic interface.
@@ -31,7 +42,17 @@ abstract class DeviceRepository {
 
   /// Sends a command to a device.
   /// The command format is device-type-specific.
-  Future<void> sendCommand(String deviceId, DeviceCommand command);
+  ///
+  /// Never throws for expected device conditions (offline, unknown device,
+  /// unsupported command): those are reported explicitly through the
+  /// returned [CommandResult] so callers can surface the real outcome.
+  Future<CommandResult> sendCommand(String deviceId, DeviceCommand command);
+
+  /// Shared stream of device events (connection, state, errors).
+  ///
+  /// This is the common event contract for scenes, automations and external
+  /// interfaces. See [DeviceEvent].
+  Stream<DeviceEvent> get events;
 
   /// Reads the current state of a device.
   Future<DeviceState> readState(String deviceId);
@@ -62,51 +83,4 @@ abstract class DeviceRepository {
 
   /// Current connection state stream for a device.
   Stream<DeviceConnectionState> connectionState(String deviceId);
-}
-
-/// A command to send to a device.
-/// The interpretation is device-type-specific.
-class DeviceCommand {
-  final String type; // 'power', 'brightness', 'color', 'effect', etc.
-  final Map<String, dynamic> parameters;
-
-  const DeviceCommand({
-    required this.type,
-    required this.parameters,
-  });
-
-  factory DeviceCommand.power(bool on) => DeviceCommand(
-    type: 'power',
-    parameters: {'on': on},
-  );
-
-  factory DeviceCommand.brightness(int value) => DeviceCommand(
-    type: 'brightness',
-    parameters: {'value': value},
-  );
-
-  factory DeviceCommand.color(int red, int green, int blue) => DeviceCommand(
-    type: 'color',
-    parameters: {'red': red, 'green': green, 'blue': blue},
-  );
-
-  factory DeviceCommand.colorTemperature(int kelvin) => DeviceCommand(
-    type: 'colorTemperature',
-    parameters: {'kelvin': kelvin},
-  );
-
-  factory DeviceCommand.effect(String name, {Map<String, dynamic>? params}) => DeviceCommand(
-    type: 'effect',
-    parameters: {'name': name, 'params': params ?? {}},
-  );
-
-  factory DeviceCommand.speed(int value) => DeviceCommand(
-    type: 'speed',
-    parameters: {'value': value},
-  );
-
-  factory DeviceCommand.custom(String type, Map<String, dynamic> parameters) => DeviceCommand(
-    type: type,
-    parameters: parameters,
-  );
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /// Utility for converting byte arrays to hex strings.
 class HexUtils {
   /// Converts a list of bytes to a space-separated hex string.

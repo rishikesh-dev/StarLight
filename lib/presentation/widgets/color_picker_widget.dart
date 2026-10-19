@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/rgb_color.dart';
@@ -68,10 +70,7 @@ class _ColorPickerWidgetState extends State<ColorPickerWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Color',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Color', style: Theme.of(context).textTheme.titleMedium),
             if (widget.isConnected)
               IconButton(
                 icon: const Icon(Icons.favorite, color: Color(0xFF8E6CFF)),
@@ -113,9 +112,8 @@ class _ColorPickerWidgetState extends State<ColorPickerWidget> {
         const SizedBox(height: 6),
         Text(
           widget.initialColor.toHexStr(),
-          style: Theme.of(context).textTheme.bodySmall?.copyColor(
-                const Color(0xFF8E6CFF),
-              ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyColor(const Color(0xFF8E6CFF)),
         ),
       ],
     );

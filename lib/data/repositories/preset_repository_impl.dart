@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import '../../core/utils/app_logger.dart';
 import '../../domain/entities/preset.dart';
 import '../../domain/repositories/preset_repository.dart';
@@ -17,13 +19,15 @@ class PresetRepositoryImpl implements PresetRepository {
     AppLog.debug('repository: loadPresets');
     final models = await dataSource.loadPresets();
     return models
-        .map((m) => Preset(
-              id: m.id,
-              name: m.name,
-              red: m.red,
-              green: m.green,
-              blue: m.blue,
-            ))
+        .map(
+          (m) => Preset(
+            id: m.id,
+            name: m.name,
+            red: m.red,
+            green: m.green,
+            blue: m.blue,
+          ),
+        )
         .toList();
   }
 
@@ -32,13 +36,15 @@ class PresetRepositoryImpl implements PresetRepository {
     AppLog.debug(
       'repository: savePreset id=${preset.id} name="${preset.name}"',
     );
-    return dataSource.savePreset(PresetModel(
-      id: preset.id,
-      name: preset.name,
-      red: preset.red,
-      green: preset.green,
-      blue: preset.blue,
-    ));
+    return dataSource.savePreset(
+      PresetModel(
+        id: preset.id,
+        name: preset.name,
+        red: preset.red,
+        green: preset.green,
+        blue: preset.blue,
+      ),
+    );
   }
 
   @override
@@ -49,17 +55,19 @@ class PresetRepositoryImpl implements PresetRepository {
 
   @override
   Future<void> savePresets(List<Preset> presets) {
-    AppLog.debug(
-      'repository: savePresets (${presets.length} preset(s))',
-    );
-    return dataSource.savePresets(presets
-        .map((p) => PresetModel(
+    AppLog.debug('repository: savePresets (${presets.length} preset(s))');
+    return dataSource.savePresets(
+      presets
+          .map(
+            (p) => PresetModel(
               id: p.id,
               name: p.name,
               red: p.red,
               green: p.green,
               blue: p.blue,
-            ))
-        .toList());
+            ),
+          )
+          .toList(),
+    );
   }
 }
