@@ -170,9 +170,11 @@ class ProtocolEncoder {
   /// --- Additional Commands ---
 
   /// Command: Mode / Effect selection.
-  /// This command exists in the APK but the value-to-name mapping is NOT verified.
-  /// The APK has 117 modes (cmode1..cmode117) resolved at runtime.
-  /// Use with caution - only for testing/development.
+  ///
+  /// The APK declares 117 controller modes (`cmode1`…`cmode117`) and the
+  /// decompiled `ModeFragment` shows that the wire value of a mode **is** its
+  /// cmode number — no offset or re-basing. The name for every one of those
+  /// modes is resolved through the domain catalogue, never here.
   static const int cmdMode = 0x06;
   static const int subMode = 0x02;
 
@@ -240,9 +242,14 @@ class ProtocolEncoder {
   /// deliberately owns **no** effect name table so there is nothing to drift
   /// out of sync and no silent default for an unknown effect.
   ///
-  /// WARNING: The full mode value-to-name mapping is NOT verified.
-  /// The APK has 117 modes (cmode1..cmode117) resolved at runtime; only the
-  /// catalogue's ids are exposed.
+  /// The mode id is the controller's own mode number, matching the
+  /// decompiled APK: `ModeFragment.f0(mode)` writes exactly this packet and
+  /// the wheel index arithmetic maps every tab onto the `cmode` number
+  /// itself. The catalogue exposes all 117 APK modes (`cmode1`…`cmode117`),
+  /// plus mode 0 for the steady colour.
+  ///
+  /// NOTE: the mode *names* come from the APK, but the resulting visual
+  /// pattern has not been verified against physical hardware.
   static Uint8List setMode(int modeId) {
     if (modeId < 0) modeId = 0;
     return Uint8List.fromList([

@@ -56,11 +56,11 @@ void main() {
       when(() => bleRepository.sendCommand(any())).thenAnswer((_) async {});
       final engine = EffectEngine(CommandRouter(bleRepository));
 
-      final result = await engine.apply(effectById('rainbow')!);
+      final result = await engine.apply(effectById('cmode3')!);
 
       expect(result.isSent, isTrue);
       expect(
-        _sameBytes(captureSingle().bytes, ProtocolEncoder.setMode(2)),
+        _sameBytes(captureSingle().bytes, ProtocolEncoder.setMode(3)),
         isTrue,
       );
     });
@@ -69,14 +69,17 @@ void main() {
       when(() => bleRepository.sendCommand(any())).thenAnswer((_) async {});
       final engine = EffectEngine(CommandRouter(bleRepository));
 
-      final result = await engine.apply(effectById('chase')!, speed: 40);
+      final result = await engine.apply(effectById('cmode23')!, speed: 40);
 
       expect(result.isSent, isTrue);
       final captured = verify(() => bleRepository.sendCommand(captureAny()))
           .captured
           .cast<LightCommand>();
       expect(captured, hasLength(2));
-      expect(_sameBytes(captured[0].bytes, ProtocolEncoder.setMode(7)), isTrue);
+      expect(
+        _sameBytes(captured[0].bytes, ProtocolEncoder.setMode(23)),
+        isTrue,
+      );
       expect(
         _sameBytes(captured[1].bytes, ProtocolEncoder.setSpeed(40)),
         isTrue,
@@ -89,7 +92,7 @@ void main() {
         when(() => bleRepository.sendCommand(any())).thenAnswer((_) async {});
         final engine = EffectEngine(CommandRouter(bleRepository));
 
-        final result = await engine.apply(effectById('rainbow')!, speed: 101);
+        final result = await engine.apply(effectById('cmode3')!, speed: 101);
 
         expect(result.outcome, EffectOutcome.invalidParameter);
         expect(result.code, 'speed_out_of_range');
@@ -130,7 +133,7 @@ void main() {
           .thenThrow(Exception('link down'));
       final engine = EffectEngine(CommandRouter(bleRepository));
 
-      final result = await engine.apply(effectById('rainbow')!);
+      final result = await engine.apply(effectById('cmode3')!);
 
       expect(result.outcome, EffectOutcome.transportError);
     });
@@ -144,7 +147,7 @@ void main() {
           ..applyProfile(null, capabilities: const {});
         final engine = EffectEngine(router);
 
-        final result = await engine.apply(effectById('rainbow')!);
+        final result = await engine.apply(effectById('cmode3')!);
 
         expect(result.outcome, EffectOutcome.unsupported);
         verifyNever(() => bleRepository.sendCommand(any()));
@@ -169,7 +172,7 @@ void main() {
         )..applyProfile(profile, capabilities: const {DeviceCapability.effect});
         final engine = EffectEngine(router);
 
-        await engine.apply(effectById('rainbow')!);
+        await engine.apply(effectById('cmode3')!);
 
         expect(executor.sent, hasLength(1));
         expect(executor.sent.single.$2.type, 'effect');
@@ -189,7 +192,7 @@ void main() {
           );
         final engine = EffectEngine(router);
 
-        final result = await engine.apply(effectById('rainbow')!);
+        final result = await engine.apply(effectById('cmode3')!);
 
         expect(result.outcome, EffectOutcome.unsupported);
         verifyNever(() => bleRepository.sendCommand(any()));
@@ -205,7 +208,7 @@ void main() {
       final engine = EffectEngine(CommandRouter(bleRepository));
       engine.bindDevice('device-a');
 
-      final pending = engine.apply(effectById('rainbow')!);
+      final pending = engine.apply(effectById('cmode3')!);
       engine.bindDevice('device-b'); // active device changed mid-flight
       completer.complete();
 

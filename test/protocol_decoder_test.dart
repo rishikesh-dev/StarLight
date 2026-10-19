@@ -129,16 +129,16 @@ void main() {
       expect(bytes[4], 0x00);
     });
 
-    test('setMode encodes a catalogue effect id (Rainbow = 2)', () {
-      final rainbow = ProtocolEncoder.setMode(
-        effectById('rainbow')!.protocolModeId!,
+    test('setMode encodes a catalogue effect id (cmode3 = 3)', () {
+      final mode = ProtocolEncoder.setMode(
+        effectById('cmode3')!.protocolModeId!,
       );
-      expect(rainbow[0], 0xBC);
-      expect(rainbow[1], 0x06);
-      expect(rainbow[2], 0x02);
-      expect(rainbow[3], 0x00);
-      expect(rainbow[4], 0x02);
-      expect(rainbow.last, 0x55);
+      expect(mode[0], 0xBC);
+      expect(mode[1], 0x06);
+      expect(mode[2], 0x02);
+      expect(mode[3], 0x00);
+      expect(mode[4], 0x03);
+      expect(mode.last, 0x55);
     });
 
     test('setSpeed encodes the byte field', () {

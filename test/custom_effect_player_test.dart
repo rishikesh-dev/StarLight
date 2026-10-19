@@ -53,7 +53,7 @@ void main() {
     });
 
     test('rejects a device pattern (not a custom effect)', () {
-      final result = buildPlayer().validate(effect('rainbow'));
+      final result = buildPlayer().validate(effect('cmode3'));
       expect(result?.outcome, EffectOutcome.unsupported);
     });
 
@@ -126,7 +126,7 @@ void main() {
     });
 
     test('refuses a device pattern without writing', () async {
-      final result = await buildPlayer().start(effect('rainbow'));
+      final result = await buildPlayer().start(effect('cmode3'));
       expect(result.outcome, EffectOutcome.unsupported);
       verifyNever(() => ble.sendCommand(any()));
     });

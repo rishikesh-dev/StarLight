@@ -39,7 +39,7 @@ The stock MR Star app requires an account, communicates with cloud services, and
 
 | Hardware | Protocol | Validation Status |
 |----------|----------|-------------------|
-| MR Star LED controller (GATT service `FFF0`) | BLE GATT (write `FFF3`, notify `FFF4`) | **Code path complete**; protocol derived from decompiled APK. **Hardware validation pending** — the app has not been tested on a physical MR Star device in this repository. Effect mode IDs come from the APK (cmode1..cmode117); only 11 are exposed in the catalogue. |
+| MR Star LED controller (GATT service `FFF0`) | BLE GATT (write `FFF3`, notify `FFF4`) | **Code path complete**; protocol derived from decompiled APK. **Hardware validation pending** — the app has not been tested on a physical MR Star device in this repository. Effect mode IDs come from the APK (cmode1..cmode117); all 117 are exposed in the catalogue, and the wire value of a mode is its cmode number. |
 | Custom BLE GATT controllers | BLE GATT (user-defined UUIDs + command templates) | **Code path complete**; profile verification gates usage. No physical validation performed. |
 
 **Important distinction:** "Code path complete" means the Dart code compiles, passes static analysis, and unit/widget tests exercise the logic. "Hardware-validated" would require a physical device confirming the wire protocol, effect rendering, and timing. **No hardware validation has been performed for this repository.**
@@ -133,21 +133,25 @@ All commands run from the repository root. The test suite covers protocol encodi
 ### Device-Native Effects (Hardware Patterns)
 These are modes built into the MR Star controller firmware. StarLight selects them by mode ID; the controller renders the pattern. The app cannot render these, so the Effects Studio shows a **decorative static motif explicitly labelled "Pattern is rendered by the controller"**.
 
+The catalogue holds **all 117 controller modes the MR Star APK declares** (`cmode1`…`cmode117`), transcribed verbatim from the APK's `res/values/strings.xml`, plus one app-level steady-colour entry:
+
 | Effect ID | Name | Category | Speed Range | Protocol Mode ID |
 |-----------|------|----------|-------------|------------------|
 | `solid` | Solid | Static | — | 0 |
-| `fireworks` | Fireworks | Ambient | 0–100 | 1 |
-| `rainbow` | Rainbow | Motion | 0–100 | 2 |
-| `breath` | Breath | Rhythm | 0–100 | 3 |
-| `scan` | Scan | Motion | 0–100 | 4 |
-| `flash` | Flash | Rhythm | 0–100 | 5 |
-| `police` | Police | Rhythm | 0–100 | 6 |
-| `chase` | Chase | Motion | 0–100 | 7 |
-| `comet` | Comet | Motion | 0–100 | 8 |
-| `lava` | Lava | Ambient | 0–100 | 9 |
-| `ocean` | Ocean | Motion | 0–100 | 10 |
+| `cmode1` | Automatic loop | Ambient | 0–100 | 1 |
+| `cmode2` | Symphony | Ambient | 0–100 | 2 |
+| `cmode3` | Colorful energy | Ambient | 0–100 | 3 |
+| `cmode4` | Colorful jumps | Rhythm | 0–100 | 4 |
+| … | … | … | 0–100 | … |
+| `cmode117` | Yellow dots on white background running | Motion | 0–100 | 117 |
 
-**Validation status:** Mode IDs come from the decompiled APK. **No physical device has confirmed these mode IDs produce the described patterns.** The Effects Studio presents them as "device patterns" with honest labelling.
+The full table, its source grouping and the per-mode category derivation live in `lib/domain/entities/effect.dart` and are pinned by `test/effects_catalogue_test.dart`.
+
+**Protocol convention (verified, not assumed):** the decompiled `ModeFragment` shows that the wire value of a mode **is** its cmode number — the wheel maps every tab straight onto the cmode number (`Basic` 1–4/7/10/26–27/29–32, `Opening & closing` +35, `Transition` +45, `Running water` +55, `Tailing` +76, `Running` +84). `ProtocolEncoder.setMode` therefore needs no shift. Four pairs of modes genuinely share a display name in the APK (`cmode65`/`cmode68`, `cmode72`/`cmode74`, `cmode97`/`cmode112`, `cmode100`/`cmode114`); the duplicates are preserved, and the per-mode `id`/`commandName` (`cmodeN`) is what disambiguates them.
+
+**Legacy names.** Before the catalogue was rebuilt, StarLight shipped its own labels for mode ids (`Fireworks`, `Rainbow`, `Breath`, `Scan`, `Flash`, `Police`, `Chase`, `Comet`, `Lava`, `Ocean`). Those names were never in the firmware — only the mode id they selected was real. Scenes saved with them keep working: a legacy name resolves to the mode it always selected (`kLegacyEffectCommandModeIds`), so the device does exactly what it did before, and the scene editor migrates the stored value to the canonical `cmodeN` on the next save. `Solid` is still a canonical name (mode 0). Any other unknown value is preserved verbatim and refused by the device at run time — it is never silently replaced by a different effect.
+
+**Validation status:** Mode IDs and names come from the decompiled APK. **No physical device has confirmed these mode IDs produce the described patterns.** The Effects Studio presents them as "device patterns" with honest labelling.
 
 ### Custom Effects (StarLight Algorithms)
 These are computed in Dart and streamed as a sequence of global colours over the BLE colour characteristic. They require `DeviceCapability.color` on the active route.

@@ -590,13 +590,27 @@ class _EffectEditor extends StatelessWidget {
       if (effect.commandName != null) effect,
   ];
 
-  /// The command name actually used, falling back to the first real pattern.
-  static String? resolve(String? selected) {
-    final list = options;
-    for (final effect in list) {
-      if (effect.commandName == selected) return selected;
+  /// The command name to store for [selected].
+  ///
+  /// A legacy name is migrated to the canonical command for the mode it
+  /// always selected; any other unknown value is preserved verbatim rather
+  /// than being replaced by a different effect. See
+  /// [resolveEffectCommandName] for the full policy.
+  static String? resolve(String? selected) =>
+      resolveEffectCommandName(selected);
+
+  /// The value to show in the dropdown.
+  ///
+  /// `null` when the stored value is not a known effect, because the dropdown
+  /// may only hold values that are actually selectable. The stored value
+  /// itself is still preserved by [resolve].
+  static String? dropdownValue(String? selected) {
+    final resolved = resolve(selected);
+    if (resolved == null) return null;
+    for (final effect in options) {
+      if (effect.commandName == resolved) return resolved;
     }
-    return list.isEmpty ? null : list.first.commandName;
+    return null;
   }
 
   @override
@@ -610,7 +624,7 @@ class _EffectEditor extends StatelessWidget {
     }
 
     return DropdownButtonFormField<String>(
-      initialValue: resolve(selected),
+      initialValue: dropdownValue(selected),
       isExpanded: true,
       decoration: const InputDecoration(
         labelText: 'Effect',

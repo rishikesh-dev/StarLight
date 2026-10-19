@@ -212,10 +212,10 @@ void main() {
         when(() => bleRepository.sendCommand(any())).thenAnswer((_) async {});
         return buildBloc();
       },
-      act: (bloc) => bloc.add(const ChangeEffect('Rainbow')),
+      act: (bloc) => bloc.add(const ChangeEffect('cmode3')),
       expect: () => [
         isA<EffectChanged>()
-            .having((s) => s.effect, 'effect', 'Rainbow')
+            .having((s) => s.effect, 'effect', 'cmode3')
             .having((s) => s.isOn, 'isOn', true),
       ],
     );
@@ -227,7 +227,7 @@ void main() {
             .thenThrow(Exception('link down'));
         return buildBloc();
       },
-      act: (bloc) => bloc.add(const ChangeEffect('Rainbow')),
+      act: (bloc) => bloc.add(const ChangeEffect('cmode3')),
       expect: () => [isA<LightError>()],
     );
 

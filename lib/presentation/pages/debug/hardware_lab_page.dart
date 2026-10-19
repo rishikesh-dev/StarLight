@@ -10,6 +10,7 @@ import 'package:starlight/core/ble/protocol_encoder.dart';
 import 'package:starlight/core/utils/app_logger.dart';
 import 'package:starlight/core/utils/hex_utils.dart';
 import 'package:starlight/domain/entities/device_command.dart';
+import 'package:starlight/domain/entities/effect.dart';
 import 'package:starlight/presentation/bloc/light/light_bloc.dart';
 import 'package:starlight/presentation/theme/app_theme.dart';
 
@@ -181,19 +182,20 @@ class _HardwareLabPageState extends State<HardwareLabPage>
       _sendNativeMode(_currentModeId);
       await Future.delayed(Duration(seconds: _autoStepDelaySec));
       if (!_autoStepping) break;
-      setState(() => _currentModeId = (_currentModeId + 1) % 131);
+      setState(() => _currentModeId = (_currentModeId + 1) % _kMrStarModeCount);
     }
   }
 
   void _prevMode() => setState(() {
-    _currentModeId = (_currentModeId - 1) % 131;
-    if (_currentModeId < 0) _currentModeId += 131;
+    _currentModeId = (_currentModeId - 1) % _kMrStarModeCount;
+    if (_currentModeId < 0) _currentModeId += _kMrStarModeCount;
   });
 
   void _nextMode() =>
-      setState(() => _currentModeId = (_currentModeId + 1) % 131);
+      setState(() => _currentModeId = (_currentModeId + 1) % _kMrStarModeCount);
 
-  void _jumpToMode(int id) => setState(() => _currentModeId = id.clamp(0, 130));
+  void _jumpToMode(int id) =>
+      setState(() => _currentModeId = id.clamp(0, _kMrStarMaxModeId));
 
   void _saveNote() =>
       setState(() => _modeNotes[_currentModeId] = _noteController.text);
@@ -216,21 +218,15 @@ class _HardwareLabPageState extends State<HardwareLabPage>
   }
 }
 
+/// The controller mode ids StarLight knows about: mode 0 (steady colour)
+/// plus the APK's `cmode1`…`cmode117`.
+const int _kMrStarMaxModeId = 117;
+const int _kMrStarModeCount = _kMrStarMaxModeId + 1;
+
 String _modeName(int id) {
-  return switch (id) {
-    0 => 'Solid',
-    1 => 'Fireworks',
-    2 => 'Rainbow',
-    3 => 'Breath',
-    4 => 'Scan',
-    5 => 'Flash',
-    6 => 'Police',
-    7 => 'Chase',
-    8 => 'Comet',
-    9 => 'Lava',
-    10 => 'Ocean',
-    _ => 'Mode $id',
-  };
+  final effect = effectByModeId(id);
+  if (effect != null) return effect.name;
+  return 'Mode $id';
 }
 
 class _NativeModeTab extends StatelessWidget {
@@ -426,12 +422,12 @@ class _NativeModeTab extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final id in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+                for (final effect in kMrStarEffects)
                   _ModeChip(
-                    id: id,
-                    name: _modeName(id),
-                    selected: id == currentModeId,
-                    onTap: () => onJump(id),
+                    id: effect.protocolModeId!,
+                    name: effect.name,
+                    selected: effect.protocolModeId == currentModeId,
+                    onTap: () => onJump(effect.protocolModeId!),
                   ),
               ],
             ),
@@ -544,7 +540,7 @@ class _SpeedTestTab extends StatelessWidget {
               child: DropdownButton<int>(
                 value: modeId,
                 items: List.generate(
-                  11,
+                  _kMrStarModeCount,
                   (i) => DropdownMenuItem(
                     value: i,
                     child: Text('$i: ${_modeName(i)}'),

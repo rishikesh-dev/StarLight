@@ -10,10 +10,12 @@ import 'device_capability.dart';
 /// Categories are presentation-level groupings only: they carry no protocol
 /// meaning and never influence command generation.
 enum EffectCategory {
-  /// Effects that hold a steady output (e.g. Solid).
+  /// Effects that hold a fixed colour arrangement — a steady colour or a
+  /// fixed spatial gradient (e.g. Solid, the MR Star `… gradient` modes).
   static('Static'),
 
-  /// Effects whose pattern travels along the strip (e.g. Rainbow, Chase).
+  /// Effects whose pattern travels along the strip (e.g. the MR Star
+  /// `horse racing`, `trailing` and `running` modes).
   motion('Motion'),
 
   /// Effects based on pulsing or flashing (e.g. Breath, Flash).
@@ -262,129 +264,588 @@ class EffectDefinition extends Equatable {
   ];
 }
 
+/// The MR Star controller mode table, transcribed verbatim from the
+/// decompiled MR Star APK (`res/values/strings.xml`, keys `cmode1` …
+/// `cmode117`).
+///
+/// **Protocol convention — verified, not assumed.** The decompiled
+/// `ModeFragment.f0(mode)` writes the mode packet
+/// `BC 06 02 <mode/255> <mode%255> 55`, and the wheel index arithmetic in
+/// `ModeFragment.P` maps every tab straight onto the *cmode number*:
+///
+/// | APK tab | wheel index → mode id |
+/// |---------|-----------------------|
+/// | Basic | 0–3 → 1–4, 4 → 7, 5 → 10, 6–7 → 26–27, 8–11 → 29–32 |
+/// | Opening & closing | index → index + 35 |
+/// | Transition | index → index + 45 |
+/// | Running water | index → index + 55 |
+/// | Tailing | index → index + 76 |
+/// | Running | index → index + 84 |
+///
+/// Every offset is the first cmode number of its group, so the wire value of
+/// a mode **is** its cmode number: `protocolModeId == cmode number` for all
+/// modes 1…117. `ProtocolEncoder.setMode` therefore needs no shift and no
+/// re-basing of the existing 0–255 byte field.
+///
+/// **Names are the APK's own**, copied verbatim — including the four pairs of
+/// genuinely duplicated display names (`cmode65`/`cmode68`,
+/// `cmode72`/`cmode74`, `cmode97`/`cmode112`, `cmode100`/`cmode114`). Those
+/// duplicates are preserved: they are distinct controller modes that happen
+/// to share a label, not a mapping defect. The per-mode `id`/`commandName`
+/// are `cmodeN`, so the disambiguation lives in the id and never in the
+/// user-visible name.
+///
+/// **Categories** are derived from the APK's own grouping and the mode's
+/// described behaviour:
+///
+/// * [EffectCategory.static] — a fixed spatial colour arrangement
+///   (the `… gradient` family, `cmode10`–`cmode15`).
+/// * [EffectCategory.rhythm] — pulsing or flashing in place (`jumps`,
+///   `strobe`, `opening-closing`, `light-dark transition`).
+/// * [EffectCategory.motion] — a pattern that travels along the strip
+///   (`horse racing`, `chasing`, `flow`, `trailing`, `running`, …).
+/// * [EffectCategory.ambient] — the three showcase modes of the Basic tab
+///   (`cmode1`–`cmode3`).
+class _MrStarModeEntry {
+  /// The controller mode id. Equal to the APK's `cmodeN` number.
+  final int mode;
+
+  /// The APK's display name for this mode, copied verbatim from
+  /// `strings.xml`.
+  final String name;
+
+  /// Browsing category, derived from the mode's source group and behaviour.
+  final EffectCategory category;
+
+  /// The APK tab/group the mode belongs to, or `null` when the APK declares
+  /// the mode in `strings.xml` but exposes it in no tab.
+  final String? group;
+
+  const _MrStarModeEntry(this.mode, this.name, this.category, this.group);
+}
+
+/// The full `cmode1`…`cmode117` table, in APK order.
+const List<_MrStarModeEntry> _kMrStarModeTable = <_MrStarModeEntry>[
+  _MrStarModeEntry(1, 'Automatic loop', EffectCategory.ambient, 'Basic'),
+  _MrStarModeEntry(2, 'Symphony', EffectCategory.ambient, 'Basic'),
+  _MrStarModeEntry(3, 'Colorful energy', EffectCategory.ambient, 'Basic'),
+  _MrStarModeEntry(4, 'Colorful jumps', EffectCategory.rhythm, 'Basic'),
+  _MrStarModeEntry(5, 'Red-green-blue jumps', EffectCategory.rhythm, null),
+  _MrStarModeEntry(6, 'Yellow-blue-purple jumps', EffectCategory.rhythm, null),
+  _MrStarModeEntry(7, '7 colors strobe', EffectCategory.rhythm, 'Basic'),
+  _MrStarModeEntry(8, 'Red-green-blue strobe', EffectCategory.rhythm, null),
+  _MrStarModeEntry(9, 'Yellow-purple-blue strobe', EffectCategory.rhythm, null),
+  _MrStarModeEntry(10, '7 colors gradient', EffectCategory.static, 'Basic'),
+  _MrStarModeEntry(
+    11,
+    'Alternate red-yellow gradient',
+    EffectCategory.static,
+    null,
+  ),
+  _MrStarModeEntry(
+    12,
+    'Alternate red-purple gradient',
+    EffectCategory.static,
+    null,
+  ),
+  _MrStarModeEntry(
+    13,
+    'Green-green alternate gradient',
+    EffectCategory.static,
+    null,
+  ),
+  _MrStarModeEntry(
+    14,
+    'Alternate green-yellow gradient',
+    EffectCategory.static,
+    null,
+  ),
+  _MrStarModeEntry(
+    15,
+    'Blue-purple alternating gradient',
+    EffectCategory.static,
+    null,
+  ),
+  _MrStarModeEntry(16, 'Red horse racing', EffectCategory.motion, null),
+  _MrStarModeEntry(17, 'Green horse racing', EffectCategory.motion, null),
+  _MrStarModeEntry(18, 'Blue horse racing', EffectCategory.motion, null),
+  _MrStarModeEntry(19, 'Yellow horse racing', EffectCategory.motion, null),
+  _MrStarModeEntry(20, 'Cyan horse racing', EffectCategory.motion, null),
+  _MrStarModeEntry(21, 'Purple horse racing', EffectCategory.motion, null),
+  _MrStarModeEntry(22, 'White horse racing', EffectCategory.motion, null),
+  _MrStarModeEntry(23, 'Colorful chasing light', EffectCategory.motion, null),
+  _MrStarModeEntry(24, 'Red-green-blue follow-up', EffectCategory.motion, null),
+  _MrStarModeEntry(
+    25,
+    'Yellow-cyan-purple follow-up light',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(26, 'Colorful fluttering', EffectCategory.motion, 'Basic'),
+  _MrStarModeEntry(
+    27,
+    'Red-green-blue fluttering',
+    EffectCategory.motion,
+    'Basic',
+  ),
+  _MrStarModeEntry(
+    28,
+    'Yellow-cyan-purple fluttering',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(29, 'Colorful brushing', EffectCategory.motion, 'Basic'),
+  _MrStarModeEntry(
+    30,
+    'Red-green-blue color brushing',
+    EffectCategory.motion,
+    'Basic',
+  ),
+  _MrStarModeEntry(
+    31,
+    'Yellow-cyan-purple color brushing',
+    EffectCategory.motion,
+    'Basic',
+  ),
+  _MrStarModeEntry(
+    32,
+    'Colorful brush color brush closed-pull',
+    EffectCategory.motion,
+    'Basic',
+  ),
+  _MrStarModeEntry(
+    33,
+    'Red-green-blue color brush closed-pull',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    34,
+    'Yellow-cyan-purple color brush closed-pull',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    35,
+    '7 colors opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    36,
+    'Red-green-blue opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    37,
+    'Yellow-cyan-purple opening-closes',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    38,
+    'Red opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    39,
+    'Green opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    40,
+    'Blue opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    41,
+    'Yellow opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    42,
+    'Cyan opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    43,
+    'purple opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    44,
+    'White opening-closing',
+    EffectCategory.rhythm,
+    'Opening & closing',
+  ),
+  _MrStarModeEntry(
+    45,
+    '7 colors light-dark transition',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    46,
+    'Blue-red-green light-dark transition',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    47,
+    'Violet-green-yellow light-dark transition',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    48,
+    '6 colors light-dark transition red',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    49,
+    '6 colors light-dark transition green',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    50,
+    '6 colors light-dark transition blue',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    51,
+    '6 colors light-dark transition cyan',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    52,
+    '6 colors light-dark transition yellow',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    53,
+    '6 colors light-dark transition purple',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    54,
+    '6 colors light-dark transition white',
+    EffectCategory.rhythm,
+    'Transition',
+  ),
+  _MrStarModeEntry(
+    55,
+    '7 colors flowing water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    56,
+    'Blue-green-red running water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    57,
+    'Purple-green-yellow running water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    58,
+    'Red-green running water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    59,
+    'Green-blue running water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    60,
+    'Yellow-blue running water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    61,
+    'Yellow-cyan running water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    62,
+    'Blue-purple running water',
+    EffectCategory.motion,
+    'Running water',
+  ),
+  _MrStarModeEntry(
+    63,
+    'Black-white running water',
+    EffectCategory.motion,
+    'Flow',
+  ),
+  _MrStarModeEntry(64, 'White-red-white flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(65, 'White-green-white flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(66, 'White-blue-white flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(
+    67,
+    'White-yellow-white flow',
+    EffectCategory.motion,
+    'Flow',
+  ),
+  _MrStarModeEntry(68, 'White-green-white flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(
+    69,
+    'White purple-white flow',
+    EffectCategory.motion,
+    'Flow',
+  ),
+  _MrStarModeEntry(70, 'Red-white-red flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(71, 'Green-white-green flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(72, 'Blue-white-blue flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(
+    73,
+    'yellow-white-yellow flow',
+    EffectCategory.motion,
+    'Flow',
+  ),
+  _MrStarModeEntry(74, 'Blue-white-blue flow', EffectCategory.motion, 'Flow'),
+  _MrStarModeEntry(
+    75,
+    'Purple-white-purple flow',
+    EffectCategory.motion,
+    'Flow',
+  ),
+  _MrStarModeEntry(76, '7 colors trailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(77, 'Red trailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(78, 'Green trailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(79, 'Blue trailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(80, 'Yellow trailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(81, 'Cyan tailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(82, 'Purple tailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(83, 'White trailing', EffectCategory.motion, 'Tailing'),
+  _MrStarModeEntry(84, 'Red running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(85, 'Green running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(86, 'Blue running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(87, 'Yellow running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(88, 'Cyan running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(89, 'Purple running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(90, 'White running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(91, '7 colors running', EffectCategory.motion, 'Running'),
+  _MrStarModeEntry(
+    92,
+    'Blue-green-red running',
+    EffectCategory.motion,
+    'Running',
+  ),
+  _MrStarModeEntry(
+    93,
+    'Purple-cyan-yellow running',
+    EffectCategory.motion,
+    'Running',
+  ),
+  _MrStarModeEntry(
+    94,
+    'Blue-purple-cyan-yellow running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    95,
+    'Blue-green-cyan-yellow running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    96,
+    'Red dot on white background running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    97,
+    'Red background and green dot running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    98,
+    'Green background and blue dot running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    99,
+    'Yellow dot on the blue background running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    100,
+    'Yellow background and blue dots running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    101,
+    'Blue background and purple dots are running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    102,
+    'White dots running on purple background',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    103,
+    'Red background and white dots running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    104,
+    '7 colors running with red background',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    105,
+    '7 colors running with green background',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    106,
+    '7 colors running with blue background',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    107,
+    '7 colors yellow background running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    108,
+    'Green background 7 colors running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    109,
+    '7 colors running with purple background',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    110,
+    '7 colors running on white background',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    111,
+    'Blue background and green dot running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    112,
+    'Red background and green dot running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    113,
+    'Red dot on the blue background running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    114,
+    'Yellow background and blue dots running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    115,
+    'The yellow dots on the purple bottom running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    116,
+    'Yellow background and white dots running',
+    EffectCategory.motion,
+    null,
+  ),
+  _MrStarModeEntry(
+    117,
+    'Yellow dots on white background running',
+    EffectCategory.motion,
+    null,
+  ),
+];
+
 /// The built-in catalogue of device-native effects for the MR Star protocol.
 ///
-/// Each entry owns its display metadata *and* its canonical protocol command
+/// Every entry owns its display metadata *and* its canonical protocol command
 /// ([EffectDefinition.protocolModeId]). Every encode site resolves through
-/// [effectByCommandName] / [effectById] and `ProtocolEncoder.setMode`, so there
-/// is exactly one mapping to keep correct.
+/// [effectByCommandName] / [effectById] and `ProtocolEncoder.setMode`, so
+/// there is exactly one mapping to keep correct.
 ///
-/// The mode ids come from the decompiled controller APK and are **not verified
-/// against hardware**; the Effects Studio therefore describes these as
-/// device-native controller modes whose exact pattern depends on firmware.
-/// [hardwareVerified] is false for all entries — a successful write only means
-/// the mode packet was accepted, not that the visual pattern matches the name.
-const List<EffectDefinition> kMrStarEffects = <EffectDefinition>[
+/// The mode ids come from the decompiled controller APK and are **not
+/// verified against hardware**; the Effects Studio therefore describes these
+/// as device-native controller modes whose exact pattern depends on firmware.
+/// [EffectDefinition.hardwareVerified] is false for all entries — a
+/// successful write only means the mode packet was accepted, not that the
+/// visual pattern matches the name.
+final List<EffectDefinition> kMrStarEffects = <EffectDefinition>[
   EffectDefinition(
     id: 'solid',
     name: 'Solid',
     commandName: 'Solid',
     protocolModeId: 0,
-    description: 'Steady light in the current colour.',
+    description:
+        'Steady light in the current colour. Mode 0 is not part of the '
+        "APK's cmode1…cmode117 table — it is StarLight's steady-colour "
+        'entry and the only catalogue effect without a speed parameter.',
     category: EffectCategory.static,
     speedRange: null,
     hardwareVerified: false,
   ),
-  EffectDefinition(
-    id: 'fireworks',
-    name: 'Fireworks',
-    commandName: 'Fireworks',
-    protocolModeId: 1,
-    description: 'Bursts of colour along the strip.',
-    category: EffectCategory.ambient,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'rainbow',
-    name: 'Rainbow',
-    commandName: 'Rainbow',
-    protocolModeId: 2,
-    description: 'Colours cycling along the strip.',
-    category: EffectCategory.motion,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'breath',
-    name: 'Breath',
-    commandName: 'Breath',
-    protocolModeId: 3,
-    description: 'Gentle pulsing brightness.',
-    category: EffectCategory.rhythm,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'scan',
-    name: 'Scan',
-    commandName: 'Scan',
-    protocolModeId: 4,
-    description: 'Light sweeping back and forth.',
-    category: EffectCategory.motion,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'flash',
-    name: 'Flash',
-    commandName: 'Flash',
-    protocolModeId: 5,
-    description: 'Rapid on/off flashing.',
-    category: EffectCategory.rhythm,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'police',
-    name: 'Police',
-    commandName: 'Police',
-    protocolModeId: 6,
-    description: 'Alternating red/blue patrol pattern.',
-    category: EffectCategory.rhythm,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'chase',
-    name: 'Chase',
-    commandName: 'Chase',
-    protocolModeId: 7,
-    description: 'A light segment running along the strip.',
-    category: EffectCategory.motion,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'comet',
-    name: 'Comet',
-    commandName: 'Comet',
-    protocolModeId: 8,
-    description: 'A bright head with a fading trail.',
-    category: EffectCategory.motion,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'lava',
-    name: 'Lava',
-    commandName: 'Lava',
-    protocolModeId: 9,
-    description: 'Slow, molten colour movement.',
-    category: EffectCategory.ambient,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
-  EffectDefinition(
-    id: 'ocean',
-    name: 'Ocean',
-    commandName: 'Ocean',
-    protocolModeId: 10,
-    description: 'Slow wave-like colour motion.',
-    category: EffectCategory.motion,
-    speedRange: kMrStarSpeedRange,
-    hardwareVerified: false,
-  ),
+  for (final entry in _kMrStarModeTable)
+    EffectDefinition(
+      id: 'cmode${entry.mode}',
+      name: entry.name,
+      commandName: 'cmode${entry.mode}',
+      protocolModeId: entry.mode,
+      description: entry.group == null
+          ? 'MR Star firmware mode ${entry.mode} (cmode${entry.mode}).'
+          : 'MR Star firmware mode ${entry.mode} (cmode${entry.mode}) — '
+                '${entry.group}.',
+      category: entry.category,
+      speedRange: kMrStarSpeedRange,
+      hardwareVerified: false,
+    ),
 ];
 
 /// StarLight's own algorithmic effects.
@@ -510,7 +971,7 @@ const List<EffectDefinition> kCustomEffects = <EffectDefinition>[
 
 /// The single selectable catalogue: device patterns followed by StarLight's
 /// custom effects. Lookups and the studio read this one list.
-const List<EffectDefinition> kEffectCatalogue = <EffectDefinition>[
+final List<EffectDefinition> kEffectCatalogue = <EffectDefinition>[
   ...kMrStarEffects,
   ...kCustomEffects,
 ];
@@ -524,18 +985,82 @@ EffectDefinition? effectById(String? id) {
   return null;
 }
 
+/// Command names from the pre-canonical catalogue — the one StarLight shipped
+/// before the catalogue was rebuilt from the decompiled MR Star APK — mapped
+/// to the controller mode id each of them selected on the wire.
+///
+/// **Why a mode id and not a name.** Those legacy names were never in the
+/// firmware; they were StarLight's own labels for a mode number. A legacy
+/// scene that says `Rainbow` was sending mode 2, and mode 2 is `Symphony` in
+/// the real controller — so the *label* was wrong and the *packet* was not.
+/// The mode id is the only unambiguous thing about a legacy name, and
+/// resolving it there keeps the device doing exactly what it did before the
+/// catalogue was corrected.
+///
+/// The table is finite, complete and case-insensitive on lookup. `Solid` is
+/// deliberately absent: it is still a canonical command name (mode 0), so it
+/// resolves through the normal path. Anything not in this table stays
+/// unresolved and is reported as unsupported — it is never guessed at and
+/// never silently replaced by a different effect.
+const Map<String, int> kLegacyEffectCommandModeIds = <String, int>{
+  'fireworks': 1,
+  'rainbow': 2,
+  'breath': 3,
+  'scan': 4,
+  'flash': 5,
+  'police': 6,
+  'chase': 7,
+  'comet': 8,
+  'lava': 9,
+  'ocean': 10,
+};
+
+/// The effect a legacy (pre-canonical) command name refers to, or `null`.
+///
+/// See [kLegacyEffectCommandModeIds] for what a legacy name means and why it
+/// resolves to a mode id. A `null` result means the value is not a known
+/// effect at all — callers must treat that as an explicit unknown-effect
+/// failure.
+EffectDefinition? effectByLegacyCommandName(String? commandName) {
+  if (commandName == null || commandName.isEmpty) return null;
+  final modeId = kLegacyEffectCommandModeIds[commandName.toLowerCase()];
+  if (modeId == null) return null;
+  return effectByModeId(modeId);
+}
+
 /// Convenience: the device-pattern effect whose
 /// [EffectDefinition.commandName] equals [commandName], or `null` when unknown.
 ///
 /// Only hardware-native effects have a command name, so custom effects can never
-/// be selected through the device-mode path. Callers must treat `null` as an
-/// explicit unknown-effect failure — there is no default fallback, by design.
+/// be selected through the device-mode path.
+///
+/// A command name from the pre-canonical catalogue resolves to the effect that
+/// selects the same controller mode, so data saved before the catalogue was
+/// rebuilt keeps driving the device exactly as it did. Callers must treat
+/// `null` as an explicit unknown-effect failure — there is no default
+/// fallback, by design.
 EffectDefinition? effectByCommandName(String? commandName) {
   if (commandName == null || commandName.isEmpty) return null;
   for (final effect in kMrStarEffects) {
     if (effect.commandName == commandName) return effect;
   }
-  return null;
+  return effectByLegacyCommandName(commandName);
+}
+
+/// The command name to persist for a stored effect value.
+///
+/// * A canonical command name is kept as it is.
+/// * A legacy name (from before the catalogue was rebuilt) is migrated to the
+///   canonical command for the mode it always selected, so the device keeps
+///   doing exactly what it did.
+/// * Any other value is **preserved verbatim**. It is never replaced by a
+///   different effect: an unknown value stays unknown, and the device
+///   rejects it explicitly when the scene runs.
+String? resolveEffectCommandName(String? storedValue) {
+  if (storedValue == null || storedValue.isEmpty) return null;
+  final effect = effectByCommandName(storedValue);
+  if (effect == null) return storedValue;
+  return effect.commandName;
 }
 
 /// Convenience: the device-pattern effect with the given [protocolModeId].

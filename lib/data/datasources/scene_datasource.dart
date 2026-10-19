@@ -41,7 +41,9 @@ class SceneDataSource {
   }
 
   Future<void> saveScene(SceneModel scene) async {
-    final scenes = await loadScenes();
+    // `loadScenes` returns an unmodifiable list when nothing is stored yet,
+    // so copy it before appending the new scene.
+    final scenes = List<SceneModel>.of(await loadScenes());
     final index = scenes.indexWhere((s) => s.id == scene.id);
     if (index >= 0) {
       scenes[index] = scene;

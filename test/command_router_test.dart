@@ -200,7 +200,7 @@ void main() {
     test('encodes a known effect name via ProtocolEncoder', () async {
       final router = CommandRouter(bleRepository);
 
-      await router.send(DeviceCommand.effect('Rainbow'));
+      await router.send(DeviceCommand.effect('cmode3'));
 
       final command =
           verify(() => bleRepository.sendCommand(captureAny())).captured.single
@@ -208,7 +208,7 @@ void main() {
       expect(
         _sameBytes(
           command.bytes,
-          ProtocolEncoder.setMode(effectById('rainbow')!.protocolModeId!),
+          ProtocolEncoder.setMode(effectById('cmode3')!.protocolModeId!),
         ),
         isTrue,
       );

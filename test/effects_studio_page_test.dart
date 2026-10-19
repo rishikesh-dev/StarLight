@@ -119,7 +119,7 @@ void main() {
       // A custom effect is selected by default so the signature preview shows.
       expect(find.text('Aurora'), findsWidgets);
       expect(find.text('CUSTOM'), findsOneWidget);
-      expect(find.text('Rainbow'), findsWidgets);
+      expect(find.text('Colorful energy'), findsWidgets);
       expect(find.text('No device'), findsOneWidget);
       expect(find.text('Preview'), findsOneWidget);
     },
@@ -131,7 +131,7 @@ void main() {
     final bloc = await pumpStudio(tester);
     await connect(tester, bloc);
 
-    await tester.tap(find.text('Rainbow'));
+    await tester.tap(find.text('Colorful energy'));
     await tester.pump();
 
     await tester.tap(find.text('Send to device'));
@@ -145,7 +145,7 @@ void main() {
       captured.any(
         (c) => _sameBytes(
           c.bytes,
-          ProtocolEncoder.setMode(effectById('rainbow')!.protocolModeId!),
+          ProtocolEncoder.setMode(effectById('cmode3')!.protocolModeId!),
         ),
       ),
       isTrue,
@@ -181,6 +181,11 @@ void main() {
   ) async {
     await pumpStudio(tester);
 
+    // The device catalogue is long, so the custom effects are only rendered
+    // once the list is filtered down to them.
+    await tester.tap(find.text('Custom'));
+    await tester.pump();
+
     await tester.tap(find.text('Meteor'));
     await tester.pump();
 
@@ -201,7 +206,7 @@ void main() {
     await tester.tap(find.text('Device'));
     await tester.pump();
 
-    expect(find.text('Rainbow'), findsWidgets);
+    expect(find.text('Colorful energy'), findsWidgets);
     expect(find.text('Starlight'), findsNothing);
   });
 
@@ -213,7 +218,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Soft Breath'), findsWidgets);
-    expect(find.text('Rainbow'), findsNothing);
+    expect(find.text('Colorful energy'), findsNothing);
   });
 
   testWidgets('reports a failed send and never fakes the selection', (
@@ -222,7 +227,7 @@ void main() {
     final bloc = await pumpStudio(tester);
     await connect(tester, bloc);
 
-    await tester.tap(find.text('Rainbow'));
+    await tester.tap(find.text('Colorful energy'));
     await tester.pump();
 
     when(() => bleRepository.sendCommand(any()))
@@ -242,10 +247,10 @@ void main() {
   ) async {
     await pumpStudio(tester);
 
-    await tester.tap(find.text('Rainbow'));
+    await tester.tap(find.text('Colorful energy'));
     await tester.pump();
 
-    expect(find.text('Rainbow'), findsWidgets);
+    expect(find.text('Colorful energy'), findsWidgets);
     expect(find.text('Connect a device to send this pattern.'), findsOneWidget);
     verifyNever(() => bleRepository.sendCommand(any()));
   });
@@ -272,7 +277,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    await tester.tap(find.text('Rainbow'));
+    await tester.tap(find.text('Colorful energy'));
     await tester.pump();
 
     expect(
